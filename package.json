@@ -190,6 +190,21 @@
       "description": "Manage AI presets",
       "icon": "preset-icon.png",
       "mode": "view"
+    },
+    {
+      "name": "mySelectedTranslate",
+      "title": "Translate Selected Text",
+      "description": "Translate Selected Text",
+      "icon": "clipboard-icon.png",
+      "mode": "view",
+      "arguments": [
+        {
+          "name": "query",
+          "placeholder": "Query",
+          "type": "text",
+          "required": false
+        }
+      ]
     }
   ],
   "preferences": [
