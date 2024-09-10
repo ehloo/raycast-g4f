@@ -4,12 +4,16 @@
 
 import { Form, getPreferenceValues } from "@raycast/api";
 
+/// For user-friendly names
+import { preferences } from "../../package.json";
+
 /// Provider modules
 import { NexraProvider } from "./Providers/nexra";
 import { DeepInfraProvider } from "./Providers/deepinfra";
 import { BlackboxProvider } from "./Providers/blackbox";
 import { DuckDuckGoProvider } from "./Providers/duckduckgo";
 import { BestIMProvider } from "./Providers/bestim";
+import { RocksProvider } from "./Providers/rocks";
 import { PizzaGPTProvider } from "./Providers/pizzagpt";
 import { MetaAIProvider } from "./Providers/metaAI";
 import { SambaNovaProvider } from "./Providers/sambanova";
@@ -47,6 +51,12 @@ export const providers_info = {
   DuckDuckGo_Llama31_70B: { provider: DuckDuckGoProvider, model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo", stream: true, context_tokens: 4096 },
   DuckDuckGo_Mixtral_8x7B: { provider: DuckDuckGoProvider, model: "mistralai/Mixtral-8x7B-Instruct-v0.1", stream: true, context_tokens: 4096 },
   BestIM_GPT4oMini: { provider: BestIMProvider, model: "", stream: true },
+  RocksClaude35Sonnet: { provider: RocksProvider, model: "claude-3-5-sonnet-20240620", stream: true },
+  RocksClaude3Opus: { provider: RocksProvider, model: "claude-3-opus-20240229", stream: true },
+  RocksGPT4o: { provider: RocksProvider, model: "gpt-4o", stream: true },
+  RocksGPT4: { provider: RocksProvider, model: "gpt-4", stream: true },
+  RocksLlama31_405B: { provider: RocksProvider, model: "llama-3.1-405b-turbo", stream: true },
+  RocksLlama31_70B: { provider: RocksProvider, model: "llama-3.1-70b-turbo", stream: true },
   PizzaGPT: { provider: PizzaGPTProvider, model: "", stream: false },
   MetaAI: { provider: MetaAIProvider, model: "", stream: true },
   SambaNovaLlama31_405B: { provider: SambaNovaProvider, model: "llama3-405b", stream: true, context_tokens: 4096 },
@@ -62,45 +72,10 @@ export const providers_info = {
 };
 
 /// Chat providers (user-friendly names)
-export const chat_providers_names = [
-  ["Nexra (chatgpt)", "NexraChatGPT"],
-  ["Nexra (gpt-4o)", "NexraGPT4o"],
-  ["Nexra (gpt-4-32k)", "NexraGPT4"],
-  ["Nexra (Bing)", "NexraBing"],
-  ["Nexra (llama-3.1)", "NexraLlama31"],
-  ["Nexra (gemini-1.0-pro)", "NexraGeminiPro"],
-  ["DeepInfra (meta-llama-3.1-405b)", "DeepInfraLlama31_405B"],
-  ["DeepInfra (meta-llama-3.1-70b)", "DeepInfraLlama31_70B"],
-  ["DeepInfra (meta-llama-3.1-8b)", "DeepInfraLlama31_8B"],
-  ["DeepInfra (Mixtral-8x22B)", "DeepInfraMixtral_8x22B"],
-  ["DeepInfra (Mixtral-8x7B)", "DeepInfraMixtral_8x7B"],
-  ["DeepInfra (Qwen2-72B)", "DeepInfraQwen2_72B"],
-  ["DeepInfra (Mistral-7B)", "DeepInfraMistral_7B"],
-  ["DeepInfra (openchat-3.6-8b)", "DeepInfraOpenChat36_8B"],
-  ["DeepInfra (meta-llama-3-70b)", "DeepInfraLlama3_70B"],
-  ["DeepInfra (meta-llama-3-8b)", "DeepInfraLlama3_8B"],
-  ["DeepInfra (gemma-2-27b)", "DeepInfraGemma2_27B"],
-  ["DeepInfra (WizardLM-2-8x22B)", "DeepInfraWizardLM2_8x22B"],
-  ["DeepInfra (llava-1.5-7b)", "DeepInfraLlava15_7B"],
-  ["Blackbox (custom-model)", "Blackbox"],
-  ["DuckDuckGo (gpt-4o-mini)", "DuckDuckGo_GPT4oMini"],
-  ["DuckDuckGo (claude-3-haiku)", "DuckDuckGo_Claude3Haiku"],
-  ["DuckDuckGo (meta-llama-3.1-70b)", "DuckDuckGo_Llama31_70B"],
-  ["DuckDuckGo (mixtral-8x7b)", "DuckDuckGo_Mixtral_8x7B"],
-  ["BestIM (gpt-4o-mini)", "BestIM_GPT4oMini"],
-  ["PizzaGPT (gpt-3.5-turbo)", "PizzaGPT"],
-  ["Meta AI (meta-llama-3.1)", "MetaAI"],
-  ["SambaNova (llama-3.1-405b)", "SambaNovaLlama31_405B"],
-  ["SambaNova (llama-3-70b)", "SambaNovaLlama3_70B"],
-  ["SambaNova (llama-3-8b)", "SambaNovaLlama3_8B"],
-  ["Replicate (mixtral-8x7b)", "ReplicateMixtral_8x7B"],
-  ["Replicate (meta-llama-3.1-405b)", "ReplicateLlama31_405B"],
-  ["Replicate (meta-llama-3-70b)", "ReplicateLlama3_70B"],
-  ["Replicate (meta-llama-3-8b)", "ReplicateLlama3_8B"],
-  ["Google Gemini (requires API Key)", "GoogleGemini"],
-  ["GPT4Free Local API", "G4FLocal"],
-  ["Ollama Local API", "OllamaLocal"],
-];
+// fetched from package.json for consistency and to avoid duplicate code
+export const chat_providers_names = preferences
+  .find((x) => x.name === "gptProvider")
+  .data.map((x) => [x.title, x.value]);
 
 export const ChatProvidersReact = chat_providers_names.map((x) => {
   return <Form.Dropdown.Item title={x[0]} value={x[1]} key={x[1]} />;

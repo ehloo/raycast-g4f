@@ -1,7 +1,7 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "raycast-g4f",
-  "version": "3.3",
+  "version": "3.4",
   "title": "GPT4Free",
   "description": "Use GPT-4 for FREE, on Raycast - no API Key required.",
   "icon": "gpt-icon.png",
@@ -314,6 +314,31 @@
           "title": "BestIM (gpt-4o-mini)",
           "value": "BestIM_GPT4oMini"
         },
+        {
+          "title": "Rocks (claude-3.5-sonnet)",
+          "value": "RocksClaude35Sonnet"
+        },
+        {
+          "title": "Rocks (claude-3-opus)",
+          "value": "RocksClaude3Opus"
+        },
+        {
+          "title": "Rocks (gpt-4o)",
+          "value": "RocksGPT4o"
+        },
+        {
+          "title": "Rocks (gpt-4)",
+          "value": "RocksGPT4"
+        },
+        {
+          "title": "Rocks (llama-3.1-405b)",
+          "value": "RocksLlama31_405B"
+        },
+        {
+          "title": "Rocks (llama-3.1-70b)",
+          "value": "RocksLlama31_70B"
+        },
+
         {
           "title": "PizzaGPT (gpt-3.5-turbo)",
           "value": "PizzaGPT"
