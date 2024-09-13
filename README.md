@@ -21,7 +21,7 @@ installation from source is extremely simple.
 
 1. Clone the repository / download source code from GitHub.
 2. Navigate to the directory, and open a Terminal window at the downloaded folder.
-3. Run `npm ci` to install required dependencies.
+3. Run `npm ci --production` to install required dependencies.
 4. Run `npm run dev` to build and import the extension.
 
 The extension, and its full set of commands, should then show up in your Raycast app.
@@ -40,7 +40,7 @@ Updates" feature in the preferences.
 
 #### Manually
 
-In the command line, run `git pull`, `npm ci` and `npm run build` (in that order).
+In the command line, run `git pull`, `npm ci --production` and `npm run build` (in that order).
 
 You might want to update manually if the automatic update doesn't work (please also open a GitHub issue if this is the
 case);
@@ -95,9 +95,6 @@ updating manually also allows you to fetch and view the latest changes to the so
 | Rocks              | llama-3.1-405b                            | ▶️       | ![Active][active-badge] | Fast           | 7.5/10                                                                                      |
 | Rocks              | llama-3.1-70b                             | ▶️       | ![Active][active-badge] | Very Fast      | 7/10                                                                                        |
 | Meta AI            | meta-llama-3.1                            | ▶️       | ![Active][active-badge] | Medium         | 7/10, recent model with internet access.                                                    |
-| SambaNova          | llama-3.1-405b                            | ▶️       | ![Active][active-badge] | Very fast      | 8.5/10, recent model with very fast speed, however it has only 4K context window            |
-| SambaNova          | llama-3-70b                               | ▶️       | ![Active][active-badge] | Extremely fast | 8/10                                                                                        |
-| SambaNova          | llama-3-8b                                | ▶️       | ![Active][active-badge] | Extremely fast | 7.5/10                                                                                      |
 | Replicate          | mixtral-8x7b                              | ▶️       | ![Active][active-badge] | Medium         | ?/10                                                                                        |
 | Replicate          | meta-llama-3.1-405b                       | ▶️       | ![Active][active-badge] | Medium         | ?/10                                                                                        |
 | Replicate          | meta-llama-3-70b                          | ▶️       | ![Active][active-badge] | Medium         | ?/10                                                                                        |

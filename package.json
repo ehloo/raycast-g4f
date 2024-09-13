@@ -1,7 +1,7 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "raycast-g4f",
-  "version": "3.4",
+  "version": "3.5",
   "title": "GPT4Free",
   "description": "Use GPT-4 for FREE, on Raycast - no API Key required.",
   "icon": "gpt-icon.png",
@@ -323,12 +323,20 @@
           "value": "RocksClaude3Opus"
         },
         {
+          "title": "Rocks (chatgpt-4o-latest)",
+          "value": "RocksChatGPT4oLatest"
+        },
+        {
           "title": "Rocks (gpt-4o)",
           "value": "RocksGPT4o"
         },
         {
           "title": "Rocks (gpt-4)",
           "value": "RocksGPT4"
+        },
+        {
+          "title": "Rocks (WizardLM-2-8x22B)",
+          "value": "RocksWizardLM2_8x22B"
         },
         {
           "title": "Rocks (llama-3.1-405b)",
@@ -338,7 +346,6 @@
           "title": "Rocks (llama-3.1-70b)",
           "value": "RocksLlama31_70B"
         },
-
         {
           "title": "PizzaGPT (gpt-3.5-turbo)",
           "value": "PizzaGPT"
@@ -346,18 +353,6 @@
         {
           "title": "Meta AI (meta-llama-3.1)",
           "value": "MetaAI"
-        },
-        {
-          "title": "SambaNova (llama-3.1-405b)",
-          "value": "SambaNovaLlama31_405B"
-        },
-        {
-          "title": "SambaNova (llama-3-70b)",
-          "value": "SambaNovaLlama3_70B"
-        },
-        {
-          "title": "SambaNova (llama-3-8b)",
-          "value": "SambaNovaLlama3_8B"
         },
         {
           "title": "Replicate (mixtral-8x7b)",
@@ -488,7 +483,7 @@
   ],
   "dependencies": {
     "@raycast/api": "^1.80.0",
-    "g4f-image": "^1.1.0",
+    "g4f-image": "^1.2.0",
     "gemini-g4f": "^12.3.8",
     "node-fetch": "^3.3.2"
   },

@@ -16,7 +16,6 @@ import { BestIMProvider } from "./Providers/bestim";
 import { RocksProvider } from "./Providers/rocks";
 import { PizzaGPTProvider } from "./Providers/pizzagpt";
 import { MetaAIProvider } from "./Providers/metaAI";
-import { SambaNovaProvider } from "./Providers/sambanova";
 import { ReplicateProvider } from "./Providers/replicate";
 import { GeminiProvider } from "./Providers/google_gemini";
 import { G4FLocalProvider } from "./Providers/g4f_local";
@@ -53,15 +52,14 @@ export const providers_info = {
   BestIM_GPT4oMini: { provider: BestIMProvider, model: "", stream: true },
   RocksClaude35Sonnet: { provider: RocksProvider, model: "claude-3-5-sonnet-20240620", stream: true },
   RocksClaude3Opus: { provider: RocksProvider, model: "claude-3-opus-20240229", stream: true },
+  RocksChatGPT4oLatest: { provider: RocksProvider, model: "chatgpt-4o-latest", stream: true },
   RocksGPT4o: { provider: RocksProvider, model: "gpt-4o", stream: true },
   RocksGPT4: { provider: RocksProvider, model: "gpt-4", stream: true },
+  RocksWizardLM2_8x22B: { provider: RocksProvider, model: "WizardLM-2-8x22B", stream: true },
   RocksLlama31_405B: { provider: RocksProvider, model: "llama-3.1-405b-turbo", stream: true },
   RocksLlama31_70B: { provider: RocksProvider, model: "llama-3.1-70b-turbo", stream: true },
   PizzaGPT: { provider: PizzaGPTProvider, model: "", stream: false },
   MetaAI: { provider: MetaAIProvider, model: "", stream: true },
-  SambaNovaLlama31_405B: { provider: SambaNovaProvider, model: "llama3-405b", stream: true, context_tokens: 4096 },
-  SambaNovaLlama3_70B: { provider: SambaNovaProvider, model: "llama3-70b", stream: true },
-  SambaNovaLlama3_8B: { provider: SambaNovaProvider, model: "llama3-8b", stream: true },
   ReplicateLlama3_8B: { provider: ReplicateProvider, model: "meta/meta-llama-3-8b-instruct", stream: true },
   ReplicateLlama3_70B: { provider: ReplicateProvider, model: "meta/meta-llama-3-70b-instruct", stream: true },
   ReplicateLlama31_405B: { provider: ReplicateProvider, model: "meta/meta-llama-3.1-405b-instruct", stream: true },
