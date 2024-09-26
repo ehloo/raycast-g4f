@@ -30,6 +30,13 @@ const uuid4 = function () {
   return randomUUID();
 };
 
+const trendingAgentModeConfig = {
+  blackbox: {},
+  "llama-3.1-405b": { mode: true, id: "llama-3.1-405b" },
+  "llama-3.1-70b": { mode: true, id: "llama-3.1-70b" },
+  "gemini-1.5-flash": { mode: true, id: "Gemini" },
+};
+
 export const BlackboxProvider = {
   name: "Blackbox",
   generate: async function* (chat, options, { max_retries = 5 }) {
@@ -44,14 +51,14 @@ export const BlackboxProvider = {
       previewToken: null,
       codeModelMode: true,
       agentMode: {},
-      trendingAgentMode: {},
+      trendingAgentMode: trendingAgentModeConfig[options.model] || {},
       isMicMode: false,
       isChromeExt: false,
       githubToken: null,
       webSearchMode: true,
       userSystemPrompt: "",
       mobileClient: false,
-      maxTokens: 4096,
+      maxTokens: 100000,
     };
 
     try {
@@ -61,6 +68,10 @@ export const BlackboxProvider = {
         headers: headers,
         body: JSON.stringify(data),
       });
+
+      if (!response.ok) {
+        throw new Error(`status: ${response.status}, error: ${await response.text()}`);
+      }
 
       const reader = response.body;
       let search_results = false;

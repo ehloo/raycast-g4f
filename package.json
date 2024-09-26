@@ -1,7 +1,7 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "raycast-g4f",
-  "version": "3.5",
+  "version": "3.6",
   "title": "GPT4Free",
   "description": "Use GPT-4 for FREE, on Raycast - no API Key required.",
   "icon": "gpt-icon.png",
@@ -259,8 +259,8 @@
           "value": "DeepInfraMixtral_8x7B"
         },
         {
-          "title": "DeepInfra (Qwen2-72B)",
-          "value": "DeepInfraQwen2_72B"
+          "title": "DeepInfra (Qwen2.5-72B)",
+          "value": "DeepInfraQwen25_72B"
         },
         {
           "title": "DeepInfra (Mistral-7B)",
@@ -293,6 +293,18 @@
         {
           "title": "Blackbox (custom-model)",
           "value": "Blackbox"
+        },
+        {
+          "title": "Blackbox (llama-3.1-405b)",
+          "value": "BlackboxLlama31_405B"
+        },
+        {
+          "title": "Blackbox (llama-3.1-70b)",
+          "value": "BlackboxLlama31_70B"
+        },
+        {
+          "title": "Blackbox (gemini-1.5-flash)",
+          "value": "BlackboxGemini15Flash"
         },
         {
           "title": "DuckDuckGo (gpt-4o-mini)",
@@ -448,7 +460,6 @@
       "description": "Duration of inactivity before chat is deleted.",
       "required": false,
       "type": "dropdown",
-      "default": "Disabled",
       "data": [
         {
           "title": "Disabled",
@@ -478,7 +489,254 @@
           "title": "6 Months",
           "value": "4320"
         }
-      ]
+      ],
+      "default": "0"
+    },
+    {
+      "name": "defaultLanguage",
+      "title": "Default Language",
+      "description": "The default language used in AI commands.",
+      "required": false,
+      "type": "dropdown",
+      "data": [
+        {
+          "title": "🇬🇧 English",
+          "value": "English"
+        },
+        {
+          "title": "🇫🇷 French",
+          "value": "French"
+        },
+        {
+          "title": "🇨🇳 Chinese",
+          "value": "Chinese"
+        },
+        {
+          "title": "🇮🇹 Italian",
+          "value": "Italian"
+        },
+        {
+          "title": "🇩🇪 German",
+          "value": "German"
+        },
+        {
+          "title": "🇪🇸 Spanish",
+          "value": "Spanish"
+        },
+        {
+          "title": "🇵🇹 Portuguese",
+          "value": "Portuguese"
+        },
+        {
+          "title": "🇷🇺 Russian",
+          "value": "Russian"
+        },
+        {
+          "title": "🇻🇳 Vietnamese",
+          "value": "Vietnamese"
+        },
+        {
+          "title": "🇮🇳 Hindi",
+          "value": "Hindi"
+        },
+        {
+          "title": "🇦🇪 Arabic",
+          "value": "Arabic"
+        },
+        {
+          "title": "🇦🇱 Albanian",
+          "value": "Albanian"
+        },
+        {
+          "title": "🇪🇹 Amharic",
+          "value": "Amharic"
+        },
+        {
+          "title": "🇦🇲 Armenian",
+          "value": "Armenian"
+        },
+        {
+          "title": "🇧🇩 Bengali",
+          "value": "Bengali"
+        },
+        {
+          "title": "🇧🇦 Bosnian",
+          "value": "Bosnian"
+        },
+        {
+          "title": "🇧🇬 Bulgarian",
+          "value": "Bulgarian"
+        },
+        {
+          "title": "🇲🇲 Burmese",
+          "value": "Burmese"
+        },
+        {
+          "title": "🇪🇸 Catalan",
+          "value": "Catalan"
+        },
+        {
+          "title": "🇭🇷 Croatian",
+          "value": "Croatian"
+        },
+        {
+          "title": "🇨🇿 Czech",
+          "value": "Czech"
+        },
+        {
+          "title": "🇩🇰 Danish",
+          "value": "Danish"
+        },
+        {
+          "title": "🇳🇱 Dutch",
+          "value": "Dutch"
+        },
+        {
+          "title": "🇪🇪 Estonian",
+          "value": "Estonian"
+        },
+        {
+          "title": "🇫🇮 Finnish",
+          "value": "Finnish"
+        },
+        {
+          "title": "🇬🇪 Georgian",
+          "value": "Georgian"
+        },
+        {
+          "title": "🇬🇷 Greek",
+          "value": "Greek"
+        },
+        {
+          "title": "🇮🇳 Gujarati",
+          "value": "Gujarati"
+        },
+        {
+          "title": "🇭🇺 Hungarian",
+          "value": "Hungarian"
+        },
+        {
+          "title": "🇮🇸 Icelandic",
+          "value": "Icelandic"
+        },
+        {
+          "title": "🇮🇩 Indonesian",
+          "value": "Indonesian"
+        },
+        {
+          "title": "🇯🇵 Japanese",
+          "value": "Japanese"
+        },
+        {
+          "title": "🇮🇳 Kannada",
+          "value": "Kannada"
+        },
+        {
+          "title": "🇰🇿 Kazakh",
+          "value": "Kazakh"
+        },
+        {
+          "title": "🇰🇷 Korean",
+          "value": "Korean"
+        },
+        {
+          "title": "🇱🇻 Latvian",
+          "value": "Latvian"
+        },
+        {
+          "title": "🇱🇹 Lithuanian",
+          "value": "Lithuanian"
+        },
+        {
+          "title": "🇲🇰 Macedonian",
+          "value": "Macedonian"
+        },
+        {
+          "title": "🇲🇾 Malay",
+          "value": "Malay"
+        },
+        {
+          "title": "🇮🇳 Malayalam",
+          "value": "Malayalam"
+        },
+        {
+          "title": "🇮🇳 Marathi",
+          "value": "Marathi"
+        },
+        {
+          "title": "🇲🇳 Mongolian",
+          "value": "Mongolian"
+        },
+        {
+          "title": "🇳🇴 Norwegian",
+          "value": "Norwegian"
+        },
+        {
+          "title": "🇮🇷 Persian",
+          "value": "Persian"
+        },
+        {
+          "title": "🇵🇱 Polish",
+          "value": "Polish"
+        },
+        {
+          "title": "🇵🇰 Punjabi",
+          "value": "Punjabi"
+        },
+        {
+          "title": "🇷🇴 Romanian",
+          "value": "Romanian"
+        },
+        {
+          "title": "🇷🇸 Serbian",
+          "value": "Serbian"
+        },
+        {
+          "title": "🇸🇰 Slovak",
+          "value": "Slovak"
+        },
+        {
+          "title": "🇸🇮 Slovenian",
+          "value": "Slovenian"
+        },
+        {
+          "title": "🇸🇴 Somali",
+          "value": "Somali"
+        },
+        {
+          "title": "🇸🇪 Swedish",
+          "value": "Swedish"
+        },
+        {
+          "title": "🇵🇭 Tagalog",
+          "value": "Tagalog"
+        },
+        {
+          "title": "🇮🇳 Tamil",
+          "value": "Tamil"
+        },
+        {
+          "title": "🇮🇳 Telugu",
+          "value": "Telugu"
+        },
+        {
+          "title": "🇹🇭 Thai",
+          "value": "Thai"
+        },
+        {
+          "title": "🇹🇷 Turkish",
+          "value": "Turkish"
+        },
+        {
+          "title": "🇺🇦 Ukrainian",
+          "value": "Ukrainian"
+        },
+        {
+          "title": "🇵🇰 Urdu",
+          "value": "Urdu"
+        }
+      ],
+      "default": "English"
     }
   ],
   "dependencies": {
