@@ -5,6 +5,7 @@
 Homepage · [Privacy Policy](Privacy.md)
 
 ## Screenshots
+
 <img src=https://github.com/user-attachments/assets/1085b901-c72f-4bd9-9a37-473057e95393 width=400 alt="1">
 <img src=https://github.com/user-attachments/assets/fb74f124-f1ac-4957-928e-363394ac0c3b width=400 alt="2">
 <img src=https://github.com/user-attachments/assets/cf425e1a-8eaa-49d1-af31-e5fe8c6702db width=400 alt="3">
@@ -27,6 +28,7 @@ installation from source is extremely simple.
 The extension, and its full set of commands, should then show up in your Raycast app.
 
 #### Troubleshooting
+
 Please open an issue if any unexpected problems occur during installation.
 
 ### Updating
@@ -60,48 +62,58 @@ updating manually also allows you to fetch and view the latest changes to the so
 
 ## Providers & Models
 
-| Provider           | Model                                     | Features | Status                  | Speed          | Rating and remarks by extension author                                                      |
-|--------------------|-------------------------------------------|----------|-------------------------|----------------|---------------------------------------------------------------------------------------------|
-| Nexra              | chatgpt (default)                         | ▶️       | ![Active][active-badge] | Very fast      | 7.5/10, the most reliable and decently performing model.                                    |
-| Nexra              | gpt-4o                                    | ▶️       | ![Active][active-badge] | Fast           | 8.5/10, the one and only GPT-4o!                                                            |
-| Nexra              | gpt-4-32k                                 |          | ![Active][active-badge] | Medium         | 6.5/10, no streaming support but otherwise a great model.                                   |
-| Nexra              | Bing                                      | ▶️       | ![Active][active-badge] | Medium         | 8/10, GPT-4 based with web search capabilities.                                             |
-| Nexra              | llama-3.1                                 | ▶️       | ![Active][active-badge] | Fast           | 7/10                                                                                        |
-| Nexra              | gemini-1.0-pro                            | ▶️       | ![Active][active-badge] | Fast           | 6.5/10                                                                                      |
-| DeepInfra          | meta-llama-3.1-405b                       | ▶️       | ![Active][active-badge] | Medium         | 8.5/10, state-of-the-art open model, suitable for complex tasks.                            |
-| DeepInfra          | meta-llama-3.1-70b                        | ▶️       | ![Active][active-badge] | Fast           | 8/10, recent model with large context size.                                                 |
-| DeepInfra          | meta-llama-3.1-8b                         | ▶️       | ![Active][active-badge] | Very fast      | 7.5/10, recent model with large context size.                                               |
-| DeepInfra          | Mixtral-8x22B                             | ▶️       | ![Active][active-badge] | Fast           | 7.5/10, capable model for general use.                                                      |
-| DeepInfra          | Mixtral-8x7B                              | ▶️       | ![Active][active-badge] | Very fast      | 7/10                                                                                        |
-| DeepInfra          | Qwen2.5-72B                               | ▶️       | ![Active][active-badge] | Medium         | 7.5/10                                                                                      |
-| DeepInfra          | Mistral-7B                                | ▶️       | ![Active][active-badge] | Very fast      | 6.5/10                                                                                      |
-| DeepInfra          | openchat-3.6-8b                           | ▶️       | ![Active][active-badge] | Very fast      | 7/10                                                                                        |
-| DeepInfra          | meta-llama-3-70b                          | ▶️       | ![Active][active-badge] | Medium         | 7/10                                                                                        |
-| DeepInfra          | meta-llama-3-8b                           | ▶️       | ![Active][active-badge] | Very fast      | 6/10                                                                                        |
-| DeepInfra          | gemma-2-27b                               | ▶️       | ![Active][active-badge] | Very fast      | 6.5/10                                                                                      |
-| DeepInfra          | WizardLM-2-8x22B                          | ▶️       | ![Active][active-badge] | Medium         | 7/10                                                                                        |
-| DeepInfra          | llava-1.5-7b                              | ▶️ 📄¹   | ![Active][active-badge] | Fast           | 6/10, supports image input                                                                  |
-| Blackbox           | custom model                              | ▶️       | ![Active][active-badge] | Very fast      | 6.5/10, very fast generation with built-in web search ability, but is optimized for coding. |
-| DuckDuckGo         | gpt-4o-mini                               | ▶️       | ![Active][active-badge] | Very fast      | 8.5/10, authentic GPT-4o-mini model with strong privacy.                                    |
-| DuckDuckGo         | claude-3-haiku                            | ▶️️      | ![Active][active-badge] | Extremely fast | 7/10                                                                                        |
-| DuckDuckGo         | meta-llama-3.1-70b                        | ▶️️      | ![Active][active-badge] | Very fast      | 7.5/10                                                                                      |
-| DuckDuckGo         | mixtral-8x7b                              | ▶️️      | ![Active][active-badge] | Extremely fast | 7.5/10                                                                                      |
-| BestIM             | gpt-4o-mini                               | ▶️       | ![Active][active-badge] | Extremely fast | 8.5/10                                                                                      |
-| PizzaGPT           | gpt-3.5-turbo                             |          | ![Active][active-badge] | Extremely fast | 6.5/10                                                                                      |
-| Rocks              | claude-3.5-sonnet                         | ▶️       | ![Active][active-badge] | Fast           | 8.5/10                                                                                      |
-| Rocks              | claude-3-opus                             | ▶️       | ![Active][active-badge] | Fast           | 8/10                                                                                        |
-| Rocks              | gpt-4o                                    | ▶️       | ![Active][active-badge] | Fast           | 7.5/10                                                                                      |
-| Rocks              | gpt-4                                     | ▶️       | ![Active][active-badge] | Fast           | 7.5/10                                                                                      |
-| Rocks              | llama-3.1-405b                            | ▶️       | ![Active][active-badge] | Fast           | 7.5/10                                                                                      |
-| Rocks              | llama-3.1-70b                             | ▶️       | ![Active][active-badge] | Very Fast      | 7/10                                                                                        |
-| Meta AI            | meta-llama-3.1                            | ▶️       | ![Active][active-badge] | Medium         | 7/10, recent model with internet access.                                                    |
-| Replicate          | mixtral-8x7b                              | ▶️       | ![Active][active-badge] | Medium         | ?/10                                                                                        |
-| Replicate          | meta-llama-3.1-405b                       | ▶️       | ![Active][active-badge] | Medium         | ?/10                                                                                        |
-| Replicate          | meta-llama-3-70b                          | ▶️       | ![Active][active-badge] | Medium         | ?/10                                                                                        |
-| Replicate          | meta-llama-3-8b                           | ▶️       | ![Active][active-badge] | Fast           | ?/10                                                                                        |
-| Google Gemini      | auto (gemini-1.5-pro or gemini-1.5-flash) | ▶️ 📄    | ![Active][active-badge] | Very fast      | 8/10, very good overall model but requires an API Key. (It's *free*, see the section below) |
-| GPT4Free Local API | -                                         | ▶️       | ![Active][active-badge] | -              | allows access to a large variety of providers. [read more][local-api-help]                  |
-| Ollama Local API   | -                                         | ▶️       | ![Active][active-badge] | -              | allows local inference. [read more][local-api-help]                                         |
+| Provider                     | Model                                   | Features | Status                    | Speed          | Rating and remarks by extension author                                                      |
+|------------------------------|-----------------------------------------|----------|---------------------------|----------------|---------------------------------------------------------------------------------------------|
+| Nexra                        | gpt-4o (default)                        | ▶️       | ![Active][active-badge]   | Very fast      | 8.5/10, the best performing model.                                                          |
+| Nexra                        | gpt-4-32k                               |          | ![Active][active-badge]   | Medium         | 6.5/10, no streaming support but otherwise a great model.                                   |
+| Nexra                        | chatgpt                                 | ▶️       | ![Unknown][unknown-badge] | Very fast      | 7.5/10                                                                                      |
+| Nexra                        | Bing                                    | ▶️       | ![Active][active-badge]   | Medium         | 8/10, GPT-4 based with web search capabilities.                                             |
+| Nexra                        | llama-3.1                               | ▶️       | ![Active][active-badge]   | Fast           | 7/10                                                                                        |
+| Nexra                        | gemini-1.0-pro                          | ▶️       | ![Active][active-badge]   | Fast           | 6.5/10                                                                                      |
+| DeepInfra                    | meta-llama-3.2-90b-vision               | ▶️ 📄¹   | ![Active][active-badge]   | Fast           | 8.5/10, recent model with vision capabilities.                                              |
+| DeepInfra                    | meta-llama-3.1-405b                     | ▶️       | ![Unknown][unknown-badge] | Medium         | 8.5/10, state-of-the-art open model, suitable for complex tasks.                            |
+| DeepInfra                    | meta-llama-3.1-70b                      | ▶️       | ![Active][active-badge]   | Fast           | 8/10, recent model with large context size.                                                 |
+| DeepInfra                    | meta-llama-3.1-8b                       | ▶️       | ![Active][active-badge]   | Very fast      | 7.5/10, recent model with large context size.                                               |
+| DeepInfra                    | Mixtral-8x22B                           | ▶️       | ![Active][active-badge]   | Fast           | 7.5/10, capable model for general use.                                                      |
+| DeepInfra                    | Mixtral-8x7B                            | ▶️       | ![Active][active-badge]   | Very fast      | 7/10                                                                                        |
+| DeepInfra                    | Qwen2.5-72B                             | ▶️       | ![Active][active-badge]   | Medium         | 7.5/10                                                                                      |
+| DeepInfra                    | Mistral-7B                              | ▶️       | ![Active][active-badge]   | Very fast      | 6.5/10                                                                                      |
+| DeepInfra                    | openchat-3.6-8b                         | ▶️       | ![Active][active-badge]   | Very fast      | 7/10                                                                                        |
+| DeepInfra                    | meta-llama-3-70b                        | ▶️       | ![Active][active-badge]   | Medium         | 7/10                                                                                        |
+| DeepInfra                    | meta-llama-3-8b                         | ▶️       | ![Active][active-badge]   | Very fast      | 6/10                                                                                        |
+| DeepInfra                    | gemma-2-27b                             | ▶️       | ![Active][active-badge]   | Very fast      | 6.5/10                                                                                      |
+| DeepInfra                    | WizardLM-2-8x22B                        | ▶️       | ![Active][active-badge]   | Medium         | 7/10                                                                                        |
+| DeepInfra                    | llava-1.5-7b                            | ▶️ 📄¹   | ![Unknown][unknown-badge] | Fast           | 6/10, supports image input                                                                  |
+| Blackbox                     | custom model                            | ▶️       | ![Active][active-badge]   | Fast           | 7.5/10, very fast generation with built-in web search ability, but is optimized for coding. |
+| Blackbox                     | llama-3.1-405b                          | ▶️       | ![Active][active-badge]   | Fast           | 8.5/10                                                                                      |
+| Blackbox                     | llama-3.1-70b                           | ▶️       | ![Active][active-badge]   | Very fast      | 8/10                                                                                        |
+| Blackbox                     | gemini-1.5-flash                        | ▶️       | ![Active][active-badge]   | Extremely fast | 7.5/10                                                                                      |
+| Blackbox                     | gpt-4o                                  | ▶️       | ![Active][active-badge]   | Very fast      | 7.5/10                                                                                      |
+| Blackbox                     | claude-3.5-sonnet                       | ▶️       | ![Active][active-badge]   | Fast           | 8.5/10                                                                                      |
+| Blackbox                     | gemini-pro                              | ▶️       | ![Active][active-badge]   | Fast           | 8/10                                                                                        |
+| DuckDuckGo                   | gpt-4o-mini                             | ▶️       | ![Active][active-badge]   | Extremely fast | 8/10, authentic GPT-4o-mini model with strong privacy.                                      |
+| DuckDuckGo                   | claude-3-haiku                          | ▶️️      | ![Active][active-badge]   | Extremely fast | 7/10                                                                                        |
+| DuckDuckGo                   | meta-llama-3.1-70b                      | ▶️️      | ![Active][active-badge]   | Very fast      | 7.5/10                                                                                      |
+| DuckDuckGo                   | mixtral-8x7b                            | ▶️️      | ![Active][active-badge]   | Extremely fast | 7.5/10                                                                                      |
+| BestIM                       | gpt-4o-mini                             | ▶️       | ![Unknown][unknown-badge] | Extremely fast | 8.5/10                                                                                      |
+| Rocks                        | claude-3.5-sonnet                       | ▶️       | ![Active][active-badge]   | Fast           | 8.5/10                                                                                      |
+| Rocks                        | claude-3-opus                           | ▶️       | ![Active][active-badge]   | Fast           | 8/10                                                                                        |
+| Rocks                        | gpt-4o                                  | ▶️       | ![Active][active-badge]   | Fast           | 7.5/10                                                                                      |
+| Rocks                        | gpt-4                                   | ▶️       | ![Active][active-badge]   | Fast           | 7.5/10                                                                                      |
+| Rocks                        | llama-3.1-405b                          | ▶️       | ![Active][active-badge]   | Fast           | 7.5/10                                                                                      |
+| Rocks                        | llama-3.1-70b                           | ▶️       | ![Active][active-badge]   | Very Fast      | 7/10                                                                                        |
+| ChatgptFree                  | gpt-4o-mini                             | ▶️       | ![Active][active-badge]   | Extremely fast | 8.5/10                                                                                      |
+| PizzaGPT                     | gpt-3.5-turbo                           |          | ![Active][active-badge]   | Extremely fast | 6.5/10                                                                                      |
+| Meta AI                      | meta-llama-3.1                          | ▶️       | ![Active][active-badge]   | Medium         | 7/10, recent model with internet access.                                                    |
+| Replicate                    | mixtral-8x7b                            | ▶️       | ![Active][active-badge]   | Medium         | ?/10                                                                                        |
+| Replicate                    | meta-llama-3.1-405b                     | ▶️       | ![Active][active-badge]   | Medium         | ?/10                                                                                        |
+| Replicate                    | meta-llama-3-70b                        | ▶️       | ![Active][active-badge]   | Medium         | ?/10                                                                                        |
+| Replicate                    | meta-llama-3-8b                         | ▶️       | ![Active][active-badge]   | Fast           | ?/10                                                                                        |
+| Phind                        | Phind Instant                           | ▶️       | ![Active][active-badge]   | Extremely fast | 8/10                                                                                        |
+| Google Gemini                | auto (gemini-1.5-pro, gemini-1.5-flash) | ▶️ 📄    | ![Active][active-badge]   | Very fast      | 9/10, very good overall model but requires an API Key. (It's *free*, see the section below) |
+| GPT4Free Local API           | -                                       | ▶️       | ![Active][active-badge]   | -              | allows access to a large variety of providers. [read more][local-api-help]                  |
+| Ollama Local API             | -                                       | ▶️       | ![Active][active-badge]   | -              | allows local inference. [read more][local-api-help]                                         |
+| Custom OpenAI-compatible API | -                                       | ▶️       | ![Active][active-badge]   | -              | allows you to use any custom OpenAI-compatible API. [read more][local-api-help]             |
 
 ▶️ - Supports streaming.
 
@@ -132,18 +144,8 @@ separate them with commas in the preferences.
 
 ### Web Search
 
-Let GPT decide to search the web for information if it does not have enough knowledge or context.
-
-- **How to enable**: Go to the extension preferences and check the "Enable Web Search" box.
-- **Setting up**: An API Key is required to use this feature. You can get one *completely for free*:
-
-1. Go to https://app.tavily.com
-2. Sign in with a Google/GitHub account.
-3. Copy the API Key and paste it into the corresponding box in the extension preferences.
-
-The rate limit for the web search feature is around 500 requests per month (as of the time of writing).
-This should be enough for most users, but similarly you can also create multiple API Keys with different accounts;
-separate them with commas in the preferences.
+Let GPT decide to search the web for information if it does not have enough knowledge or context. Uses DuckDuckGo
+search, fast and free.
 
 ### Smart Chat Naming
 
@@ -163,10 +165,11 @@ This will back up a copy of this data to files on your computer. Useful for savi
 
 ### Code Interpreter (BETA)
 
-Allows GPT to execute Python code locally. The model has been instructed to strictly only produce safe code, 
+Allows GPT to execute Python code locally. The model has been instructed to strictly only produce safe code,
 but use at your own risk!
 
-Only models with function calling capabilities support this feature. Currently, this includes only selected DeepInfra models.
+Only models with function calling capabilities support this feature. Currently, this includes only selected DeepInfra
+models.
 
 ---
 
@@ -220,5 +223,7 @@ original [gpt4free](https://github.com/xtekky/gpt4free) project (written in Pyth
 
 
 [active-badge]: https://img.shields.io/badge/Active-brightgreen
+
 [unknown-badge]: https://img.shields.io/badge/Unknown-grey
-[local-api-help]: https://github.com/XInTheDark/raycast-g4f/wiki/Help-page:-Configure-Local-APIs
+
+[local-api-help]: https://github.com/XInTheDark/raycast-g4f/wiki/Help-page:-Manage-Custom-APIs

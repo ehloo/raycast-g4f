@@ -1,7 +1,7 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "raycast-g4f",
-  "version": "3.6",
+  "version": "3.9",
   "title": "GPT4Free",
   "description": "Use GPT-4 for FREE, on Raycast - no API Key required.",
   "icon": "gpt-icon.png",
@@ -178,9 +178,9 @@
       "mode": "view"
     },
     {
-      "name": "configureLocalAPIs",
-      "title": "Configure Local APIs",
-      "description": "Configure GPT4Free and Ollama Local API settings",
+      "name": "manageCustomAPIs",
+      "title": "Manage Custom APIs",
+      "description": "Manage custom API settings",
       "icon": "box-icon.png",
       "mode": "view"
     },
@@ -215,16 +215,16 @@
       "type": "dropdown",
       "data": [
         {
-          "title": "Nexra (chatgpt)",
-          "value": "NexraChatGPT"
-        },
-        {
           "title": "Nexra (gpt-4o)",
           "value": "NexraGPT4o"
         },
         {
           "title": "Nexra (gpt-4-32k)",
           "value": "NexraGPT4"
+        },
+        {
+          "title": "Nexra (chatgpt)",
+          "value": "NexraChatGPT"
         },
         {
           "title": "Nexra (Bing)",
@@ -237,6 +237,10 @@
         {
           "title": "Nexra (gemini-1.0-pro)",
           "value": "NexraGeminiPro"
+        },
+        {
+          "title": "DeepInfra (meta-llama-3.2-90b-vision)",
+          "value": "DeepInfraLlama32_90B_Vision"
         },
         {
           "title": "DeepInfra (meta-llama-3.1-405b)",
@@ -307,6 +311,18 @@
           "value": "BlackboxGemini15Flash"
         },
         {
+          "title": "Blackbox (gpt-4o)",
+          "value": "BlackboxGPT4o"
+        },
+        {
+          "title": "Blackbox (claude-3.5-sonnet)",
+          "value": "BlackboxClaude35Sonnet"
+        },
+        {
+          "title": "Blackbox (gemini-pro)",
+          "value": "BlackboxGeminiPro"
+        },
+        {
           "title": "DuckDuckGo (gpt-4o-mini)",
           "value": "DuckDuckGo_GPT4oMini"
         },
@@ -359,6 +375,10 @@
           "value": "RocksLlama31_70B"
         },
         {
+          "title": "ChatgptFree (gpt-4o-mini)",
+          "value": "ChatgptFree"
+        },
+        {
           "title": "PizzaGPT (gpt-3.5-turbo)",
           "value": "PizzaGPT"
         },
@@ -383,6 +403,10 @@
           "value": "ReplicateLlama3_8B"
         },
         {
+          "title": "Phind (Phind Instant)",
+          "value": "Phind"
+        },
+        {
           "title": "Google Gemini (requires API Key)",
           "value": "GoogleGemini"
         },
@@ -393,9 +417,13 @@
         {
           "title": "Ollama Local API",
           "value": "OllamaLocal"
+        },
+        {
+          "title": "Custom OpenAI-compatible API",
+          "value": "CustomOpenAI"
         }
       ],
-      "default": "NexraChatGPT"
+      "default": "NexraGPT4o"
     },
     {
       "name": "webSearch",
@@ -437,14 +465,6 @@
       "required": false,
       "type": "checkbox",
       "default": false
-    },
-    {
-      "name": "TavilyAPIKeys",
-      "title": "Tavily API Keys",
-      "description": "Optional. Only used if Web Search is enabled. Multiple keys are supported - separate them with commas.",
-      "required": false,
-      "type": "password",
-      "default": ""
     },
     {
       "name": "GeminiAPIKeys",
@@ -741,6 +761,8 @@
   ],
   "dependencies": {
     "@raycast/api": "^1.80.0",
+    "duck-duck-scrape": "^2.2.5",
+    "fetch-to-curl": "^0.6.0",
     "g4f-image": "^1.2.0",
     "gemini-g4f": "^12.3.8",
     "node-fetch": "^3.3.2"
