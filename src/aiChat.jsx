@@ -15,6 +15,8 @@ import {
 import { useEffect, useState } from "react";
 
 import { Storage } from "./api/storage";
+import { watch } from "node:fs/promises";
+
 import { current_datetime, formatDate, removePrefix } from "./helpers/helper";
 import { help_action, help_action_panel } from "./helpers/helpPage";
 import { autoCheckForUpdates } from "./helpers/update";
@@ -26,10 +28,10 @@ import * as providers from "./api/providers";
 import { getAIPresets, getPreset } from "./helpers/presets";
 
 // Web search module
-import { getWebResult, web_search_enabled } from "./api/tools/web";
+import { formatWebResult, getWebResult, has_native_web_search, web_search_mode } from "./api/tools/web";
 import { webSystemPrompt, systemResponse, webToken, webTokenEnd } from "./api/tools/web";
 
-let generationStatus = { stop: false, loading: false };
+let generationStatus = { stop: false, loading: false, updateCurrentResponse: false };
 let get_status = () => generationStatus.stop;
 
 export default function Chat({ launchContext }) {
@@ -112,23 +114,18 @@ export default function Chat({ launchContext }) {
     await Storage.write(getStorageKey(id), JSON.stringify(chat));
   };
 
-  // change a property of a chat
-  // we only update whatever object is passed
-  const changeChatProperty = (setChatData, setCurrentChatData, property, value) => {
-    if (setChatData) {
-      setChatData((oldData) => {
-        let newChatData = structuredClone(oldData);
-        getChatFromChatData(chatData.currentChat, newChatData)[property] = value;
-        return newChatData;
-      });
-    }
-    if (setCurrentChatData) {
-      setCurrentChatData((oldData) => {
-        let newChatData = structuredClone(oldData);
-        newChatData[property] = value;
-        return newChatData;
-      });
-    }
+  // change a property of a data object.
+  // if func is provided, it is applied to the object before setting the property
+  const changeProperty = (setData, property, value, func = null) => {
+    setData((oldData) => {
+      let newData = structuredClone(oldData);
+      if (!func) {
+        newData[property] = value;
+      } else {
+        func(newData)[property] = value;
+      }
+      return newData;
+    });
   };
 
   // get chat from storage
@@ -144,6 +141,8 @@ export default function Chat({ launchContext }) {
       }
     }
   };
+
+  const getCurrentChatFromChatData = (data) => getChatFromChatData(data.currentChat, data);
 
   // the lite version of the chat, stored in chatData
   const to_lite_chat_data = (chat) => {
@@ -175,7 +174,7 @@ export default function Chat({ launchContext }) {
     provider = providers.default_provider_string(),
     systemPrompt = "",
     messages = [],
-    options = {},
+    options = { creativity: "0.7", webSearch: web_search_mode("chat") },
   }) => {
     return {
       name: name,
@@ -183,18 +182,18 @@ export default function Chat({ launchContext }) {
       id: id,
       provider: provider,
       systemPrompt: systemPrompt,
-      messages: messages?.length ? messages : starting_messages(systemPrompt, provider),
+      messages: [...messages, ...starting_messages({ systemPrompt, provider, webSearch: options.webSearch })],
       options: options,
     };
   };
 
-  const starting_messages = (systemPrompt = "", provider = null) => {
+  const starting_messages = ({ systemPrompt = "", provider = null, webSearch = "off" } = {}) => {
     let messages = [];
 
-    provider = providers.get_provider_info(provider).provider;
+    provider = provider instanceof Object ? provider : providers.get_provider_info(provider).provider;
 
     // Web Search system prompt
-    if (web_search_enabled(provider)) {
+    if (webSearch === "always" || (webSearch === "auto" && !has_native_web_search(provider))) {
       systemPrompt += "\n\n" + webSystemPrompt;
     }
 
@@ -210,22 +209,24 @@ export default function Chat({ launchContext }) {
     return messages;
   };
 
-  const setCurrentChatMessage = (
-    currentChatData,
-    setCurrentChatData,
-    messageID,
-    query = null,
-    response = null,
-    finished = null
-  ) => {
+  const updateStartingMessages = (chatData, options) => {
+    const newMessages = starting_messages(options);
+
+    while (chatData.messages.length > 0 && !chatData.messages[chatData.messages.length - 1].visible) {
+      chatData.messages.pop();
+    }
+    chatData.messages.push(...newMessages);
+  };
+
+  const setCurrentChatMessage = (currentChatData, setCurrentChatData, messageID, { query, response, finished }) => {
     setCurrentChatData((oldData) => {
       let newChatData = structuredClone(oldData);
       let messages = newChatData.messages;
       for (let i = 0; i < messages.length; i++) {
         if (messages[i].id === messageID) {
-          if (query !== null) messages[i].first.content = query;
-          if (response !== null) messages[i].second.content = response;
-          if (finished !== null) messages[i].finished = finished;
+          if (query !== undefined) messages[i].first.content = query;
+          if (response !== undefined) messages[i].second.content = response;
+          if (finished !== undefined) messages[i].finished = finished;
         }
       }
       return newChatData;
@@ -237,13 +238,18 @@ export default function Chat({ launchContext }) {
     setCurrentChatData,
     messageID,
     query = null,
-    previousWebSearch = false
+    features = { webSearch: true }
   ) => {
-    setCurrentChatMessage(currentChatData, setCurrentChatData, messageID, null, ""); // set response to empty string
+    setCurrentChatMessage(currentChatData, setCurrentChatData, messageID, { response: "" }); // set response to empty string
 
     const info = providers.get_provider_info(currentChatData.provider);
 
-    const useWebSearch = web_search_enabled(info.provider);
+    const webSearchMode =
+      currentChatData.options.webSearch === "auto"
+        ? has_native_web_search(info.provider)
+          ? "off"
+          : "auto"
+        : currentChatData.options.webSearch;
 
     let elapsed = 0.001,
       chars,
@@ -253,31 +259,48 @@ export default function Chat({ launchContext }) {
 
     let loadingToast = await toast(Toast.Style.Animated, "Response loading");
 
+    // Handle web search - if always enabled, we get the web search results
+    if (webSearchMode === "always" && features.webSearch) {
+      query = query ?? currentChatData.messages[0].first.content;
+      await processWebSearchResponse(currentChatData, setCurrentChatData, messageID, null, query);
+      return;
+    }
+
     if (!info.stream) {
       response = await getChatResponse(currentChatData, query);
-      setCurrentChatMessage(currentChatData, setCurrentChatData, messageID, null, response);
+      setCurrentChatMessage(currentChatData, setCurrentChatData, messageID, { response: response });
 
       elapsed = (Date.now() - start) / 1000;
       chars = response.length;
       charPerSec = (chars / elapsed).toFixed(1);
     } else {
-      generationStatus = { stop: false, loading: true };
+      generationStatus = { stop: false, loading: true, updateCurrentResponse: false };
       let i = 0;
+      let lastChunkTime = Date.now();
 
       const handler = async (new_message) => {
         i++;
         response = new_message;
         response = formatResponse(response, info.provider);
-        setCurrentChatMessage(currentChatData, setCurrentChatData, messageID, null, response);
+        setCurrentChatMessage(currentChatData, setCurrentChatData, messageID, { response: response });
+
+        if (generationStatus.updateCurrentResponse) {
+          // See ViewResponseComponent for more details
+          // We throttle the updates to prevent excessive file I/O
+          if (Date.now() - lastChunkTime > 300) {
+            await Storage.fileStorage_write("updateCurrentResponse", response);
+            lastChunkTime = Date.now();
+          }
+        }
 
         // Web Search functionality
         // We check the response every few chunks so we can possibly exit early
         if (
-          useWebSearch &&
+          webSearchMode === "auto" &&
+          features.webSearch &&
           (i & 15) === 0 &&
           response.includes(webToken) &&
-          response.includes(webTokenEnd) &&
-          !previousWebSearch
+          response.includes(webTokenEnd)
         ) {
           generationStatus.stop = true; // stop generating the current response
           await processWebSearchResponse(currentChatData, setCurrentChatData, messageID, response, query);
@@ -295,20 +318,25 @@ export default function Chat({ launchContext }) {
 
     // Web Search functionality
     // Process web search response again in case streaming is false, or if it was not processed during streaming
-    if (useWebSearch && response.includes(webToken) && !previousWebSearch) {
+    if (webSearchMode === "auto" && features.webSearch && response.includes(webToken)) {
       generationStatus.stop = true;
       await processWebSearchResponse(currentChatData, setCurrentChatData, messageID, response, query);
       return;
     }
 
-    setCurrentChatMessage(currentChatData, setCurrentChatData, messageID, null, null, true);
+    if (generationStatus.updateCurrentResponse) {
+      // Write the final response to file
+      await Storage.fileStorage_write("updateCurrentResponse", response);
+    }
+
+    setCurrentChatMessage(currentChatData, setCurrentChatData, messageID, { finished: true });
 
     await toast(
       Toast.Style.Success,
       "Response finished",
       `${chars} chars (${charPerSec} / sec) | ${elapsed.toFixed(1)} sec`
     );
-    generationStatus.loading = false;
+    generationStatus = { stop: false, loading: false, updateCurrentResponse: false };
 
     // Smart Chat Naming functionality
     if (getPreferenceValues()["smartChatNaming"] && currentChatData.messages.length <= 2) {
@@ -500,7 +528,10 @@ export default function Chat({ launchContext }) {
         <Form.TextField id="chatName" defaultValue={chat?.name ?? `New Chat ${current_datetime()}`} />
 
         <Form.Description title="AI Preset" text="The preset will override the options below." />
-        <Form.Dropdown id="preset" defaultValue="">
+        <Form.Dropdown
+          id="preset"
+          defaultValue={chat !== null ? "" : AIPresets.find((preset) => preset.isDefault === true)?.name ?? ""}
+        >
           {[
             <Form.Dropdown.Item title="" value="" key="" />,
             ...AIPresets.map((x) => <Form.Dropdown.Item title={x.name} key={x.name} value={x.name} />),
@@ -512,11 +543,18 @@ export default function Chat({ launchContext }) {
           {providers.ChatProvidersReact}
         </Form.Dropdown>
 
+        <Form.Description title="Web Search" text="Allow GPT to search the web for information." />
+        <Form.Dropdown id="webSearch" defaultValue={chat?.options?.webSearch ?? web_search_mode("chat")}>
+          <Form.Dropdown.Item title="Disabled" value="off" />
+          <Form.Dropdown.Item title="Automatic" value="auto" />
+          <Form.Dropdown.Item title="Always" value="always" />
+        </Form.Dropdown>
+
         <Form.Description
           title="Creativity"
           text="Technical tasks like coding require less creativity, while open-ended ones require more."
         />
-        <Form.Dropdown id="creativity" defaultValue={chat?.options?.creativity || "0.7"}>
+        <Form.Dropdown id="creativity" defaultValue={chat?.options?.creativity ?? "0.7"}>
           <Form.Dropdown.Item title="None" value="0.0" />
           <Form.Dropdown.Item title="Low" value="0.3" />
           <Form.Dropdown.Item title="Medium" value="0.5" />
@@ -545,6 +583,7 @@ export default function Chat({ launchContext }) {
                 if (values.preset) {
                   let preset = getPreset(AIPresets, values.preset);
                   values.provider = preset.provider;
+                  values.webSearch = preset.webSearch;
                   values.creativity = preset.creativity;
                   values.systemPrompt = preset.systemPrompt;
                 }
@@ -553,7 +592,7 @@ export default function Chat({ launchContext }) {
                   name: values.chatName,
                   provider: values.provider,
                   systemPrompt: values.systemPrompt,
-                  options: { creativity: values.creativity },
+                  options: { creativity: values.creativity, webSearch: values.webSearch },
                 });
 
                 await addChatAsCurrent(setChatData, setCurrentChatData, newChat);
@@ -567,11 +606,39 @@ export default function Chat({ launchContext }) {
     );
   };
 
-  let ViewResponseComponent = (props) => {
+  let ViewResponseComponent = ({ idx }) => {
     const { pop } = useNavigation();
 
-    const idx = props.idx;
-    const response = currentChatData.messages[idx].second.content;
+    const [response, setResponse] = useState(currentChatData.messages[idx].second.content);
+
+    // The key thing here is that this pushed view (via Action.Push) is a sibling component, NOT a child,
+    // so it does not automatically rerender upon a value change. So when the response streams, the view doesn't update.
+    // Since we can't control the parent component (that's managed by Raycast), we need to instead write changes
+    // to a file and then read from there.
+    // We only do this if View Response is active, which ensures that performance during normal usage is not impacted.
+
+    if (!currentChatData.messages[idx].finished) {
+      // don't stream if the response is finished
+      useEffect(() => {
+        (async () => {
+          await Storage.fileStorage_write("updateCurrentResponse", "");
+        })();
+      }, []);
+
+      generationStatus.updateCurrentResponse = true;
+
+      const path = Storage.fileStoragePath("updateCurrentResponse");
+
+      (async () => {
+        const watcher = watch(path, { persistent: false });
+        for await (const event of watcher) {
+          if (event.eventType === "change") {
+            let response = await Storage.fileStorage_read("updateCurrentResponse");
+            setResponse(response);
+          }
+        }
+      })();
+    }
 
     return (
       <Detail
@@ -609,14 +676,14 @@ export default function Chat({ launchContext }) {
     );
   };
 
-  let EditMessageComponent = (props) => {
+  let EditMessageComponent = ({ idx }) => {
     if (currentChatData.messages.length === 0) {
       toast(Toast.Style.Failure, "No messages in chat");
       return;
     }
 
-    const idx = props.idx;
     const message = currentChatData.messages[idx].first.content;
+    const files = currentChatData.messages[idx].files;
 
     const { pop } = useNavigation();
 
@@ -628,35 +695,41 @@ export default function Chat({ launchContext }) {
               title="Edit Message"
               onSubmit={async (values) => {
                 pop();
-
-                currentChatData.messages[idx].first.content = values.message;
-                currentChatData.messages[idx].second.content = "";
-                currentChatData.messages[idx].finished = false;
-
-                setCurrentChatData(currentChatData); // important to update the UI!
-
-                let messageID = currentChatData.messages[idx].id;
-
-                // instead of passing the full currentChatData, we only pass the messages
-                // before, and including, the message we want to update. This is because chatCompletion takes
-                // the last message as the query.
-                let newChatData = structuredClone(currentChatData);
-
-                // slice from the back, i.e. keep the messages [idx, end], since messages data is in reverse order
-                newChatData.messages = currentChatData.messages.slice(idx);
-
-                await updateChatResponse(newChatData, setCurrentChatData, messageID); // Note how we don't pass query here because it is already in the chat
+                await regenerateResponse(currentChatData, idx, values.message, values.files);
               }}
             />
           </ActionPanel>
         }
       >
-        <Form.TextArea id="message" title="Message" defaultValue={message} />
+        <Form.TextArea title="Message" id="message" defaultValue={message} />
+        <Form.FilePicker title="Upload Files" id="files" defaultValue={files} />
       </Form>
     );
   };
 
-  let RenameChatComponent = () => {
+  let regenerateResponse = async (currentChatData, idx, newMessage = null, newFiles = null) => {
+    if (newMessage) currentChatData.messages[idx].first.content = newMessage;
+    if (newFiles) currentChatData.messages[idx].files = newFiles;
+
+    currentChatData.messages[idx].second.content = "";
+    currentChatData.messages[idx].finished = false;
+
+    setCurrentChatData(currentChatData); // important to update the UI!
+
+    let messageID = currentChatData.messages[idx].id;
+
+    // instead of passing the full currentChatData, we only pass the messages
+    // before, and including, the message we want to update. This is because chatCompletion takes
+    // the last message as the query.
+    let newChatData = structuredClone(currentChatData);
+
+    // slice from the back, i.e. keep the messages [idx, end], since messages data is in reverse order
+    newChatData.messages = currentChatData.messages.slice(idx);
+
+    await updateChatResponse(newChatData, setCurrentChatData, messageID); // Note how we don't pass query here because it is already in the chat
+  };
+
+  let ChatSettingsComponent = () => {
     const { pop } = useNavigation();
 
     return (
@@ -664,36 +737,7 @@ export default function Chat({ launchContext }) {
         actions={
           <ActionPanel>
             <Action.SubmitForm
-              title="Rename Chat"
-              onSubmit={(values) => {
-                pop();
-
-                // Check input length
-                if (values.chatName.length > 1000) {
-                  toast(Toast.Style.Failure, "Chat name is too long");
-                  return;
-                }
-
-                changeChatProperty(setChatData, setCurrentChatData, "name", values.chatName);
-              }}
-            />
-          </ActionPanel>
-        }
-      >
-        <Form.TextField id="chatName" title="Chat Name" defaultValue={currentChatData.name} />
-      </Form>
-    );
-  };
-
-  let EditChatComponent = () => {
-    const { pop } = useNavigation();
-
-    return (
-      <Form
-        actions={
-          <ActionPanel>
-            <Action.SubmitForm
-              title="Edit Chat Settings"
+              title="Save"
               onSubmit={(values) => {
                 pop();
 
@@ -704,12 +748,29 @@ export default function Chat({ launchContext }) {
                   values.systemPrompt = preset.systemPrompt;
                 }
 
+                // Limit chat name to 100 characters
+                values.chatName = values.chatName.substring(0, 100);
+
                 setCurrentChatData((oldData) => {
                   let newChatData = structuredClone(oldData);
                   newChatData.name = values.chatName;
+                  changeProperty(setChatData, "name", values.chatName, getCurrentChatFromChatData);
                   newChatData.provider = values.provider;
+
+                  // Update system prompt
+                  if (
+                    newChatData.systemPrompt !== values.systemPrompt ||
+                    newChatData.options.webSearch !== values.webSearch
+                  ) {
+                    updateStartingMessages(newChatData, {
+                      systemPrompt: values.systemPrompt,
+                      provider: values.provider,
+                      webSearch: values.webSearch,
+                    });
+                  }
+                  newChatData.options = { creativity: values.creativity, webSearch: values.webSearch };
                   newChatData.systemPrompt = values.systemPrompt;
-                  newChatData.options = { creativity: values.creativity };
+
                   return newChatData;
                 });
 
@@ -726,14 +787,16 @@ export default function Chat({ launchContext }) {
 
   // Web Search functionality
   const processWebSearchResponse = async (currentChatData, setCurrentChatData, messageID, response, query) => {
-    setCurrentChatMessage(currentChatData, setCurrentChatData, messageID, null, null, false);
-    await toast(Toast.Style.Animated, "Searching web");
-    // get everything AFTER webToken and BEFORE webTokenEnd
-    let webQuery = response.includes(webTokenEnd)
-      ? response.substring(response.indexOf(webToken) + webToken.length, response.indexOf(webTokenEnd)).trim()
-      : response.substring(response.indexOf(webToken) + webToken.length).trim();
+    setCurrentChatMessage(currentChatData, setCurrentChatData, messageID, { finished: false });
+
+    let webQuery = response
+      ? // get everything AFTER webToken and BEFORE webTokenEnd
+        response.includes(webTokenEnd)
+        ? response.substring(response.indexOf(webToken) + webToken.length, response.indexOf(webTokenEnd)).trim()
+        : response.substring(response.indexOf(webToken) + webToken.length).trim()
+      : query.substring(0, 400);
     let webResponse = await getWebResult(webQuery);
-    webResponse = `\n\n<|web_search_results|> for "${webQuery}":\n\n` + webResponse;
+    webResponse = formatWebResult(webResponse, webQuery);
 
     // Append web search results to the last user message
     // special case: If e.g. the message was edited, query is not passed as a parameter, so it is null
@@ -748,7 +811,7 @@ export default function Chat({ launchContext }) {
     setCurrentChatData(currentChatData); // important to update the UI!
 
     // Note how we don't pass query here because it is already in the chat
-    await updateChatResponse(currentChatData, setCurrentChatData, newMessageID, null, true);
+    await updateChatResponse(currentChatData, setCurrentChatData, newMessageID, null, { webSearch: false });
   };
 
   // Smart Chat Naming functionality
@@ -771,11 +834,12 @@ export default function Chat({ launchContext }) {
         messages: [new MessagePair({ prompt: newQuery })],
         provider: currentChatData.provider,
       });
-      newChatName = newChatName.trim();
+      newChatName = newChatName.trim().substring(0, 80).replace(/\n/g, " ");
 
       // Rename chat
       if (newChatName) {
-        changeChatProperty(setChatData, setCurrentChatData, "name", newChatName);
+        changeProperty(setChatData, "name", newChatName, getCurrentChatFromChatData);
+        changeProperty(setCurrentChatData, "name", newChatName);
       }
     } catch (e) {
       console.log("Smart Chat Naming failed: ", e);
@@ -789,8 +853,7 @@ export default function Chat({ launchContext }) {
     }
     let files = values?.files ?? [];
 
-    if (query === "") {
-      toast(Toast.Style.Failure, "Please enter a query");
+    if (query === "" && files.length === 0) {
       return;
     }
 
@@ -810,9 +873,7 @@ export default function Chat({ launchContext }) {
     }
   };
 
-  let GPTActionPanel = (props) => {
-    const idx = props.idx ?? 0;
-
+  let GPTActionPanel = ({ idx = 0 }) => {
     return (
       <ActionPanel>
         <Action
@@ -857,7 +918,7 @@ export default function Chat({ launchContext }) {
           />
           <Action
             icon={Icon.ArrowClockwise}
-            title="Regenerate Last Message"
+            title="Regenerate Response"
             onAction={async () => {
               if (currentChatData.messages.length === 0) {
                 await toast(Toast.Style.Failure, "No messages in chat");
@@ -873,7 +934,7 @@ export default function Chat({ launchContext }) {
                   message: "Response is still loading. Are you sure you want to regenerate it?",
                   icon: Icon.ArrowClockwise,
                   primaryAction: {
-                    title: "Regenerate Message",
+                    title: "Regenerate Response",
                     onAction: () => {
                       userConfirmed = true;
                     },
@@ -887,13 +948,7 @@ export default function Chat({ launchContext }) {
                 }
               }
 
-              currentChatData.messages[0].second.content = "";
-              currentChatData.messages[0].finished = false;
-              setCurrentChatData(currentChatData);
-
-              let messageID = currentChatData.messages[0].id;
-              // Note how we don't pass the prompt here because it is already in the chat
-              await updateChatResponse(currentChatData, setCurrentChatData, messageID);
+              await regenerateResponse(currentChatData, idx);
             }}
             shortcut={{ modifiers: ["cmd", "shift"], key: "r" }}
           />
@@ -934,19 +989,13 @@ export default function Chat({ launchContext }) {
             }}
             shortcut={{ modifiers: ["shift"], key: "delete" }}
           />
-          <Action.Push
-            icon={Icon.Pencil}
-            title="Rename Chat"
-            target={<RenameChatComponent />}
-            shortcut={{ modifiers: ["cmd", "shift"], key: "m" }}
-          />
           <Action
             icon={Icon.Tack}
             title="Pin Chat"
             onAction={async () => {
               setChatData((oldData) => {
                 let newChatData = structuredClone(oldData);
-                let chat = getChatFromChatData(newChatData.currentChat, newChatData);
+                let chat = getCurrentChatFromChatData(newChatData);
                 chat.pinned = !chat.pinned;
 
                 toast(Toast.Style.Success, chat.pinned ? "Chat pinned" : "Chat unpinned");
@@ -956,10 +1005,23 @@ export default function Chat({ launchContext }) {
             shortcut={{ modifiers: ["cmd", "shift"], key: "p" }}
           />
           <Action.Push
-            icon={Icon.Switch}
-            title="Edit Chat Settings"
-            target={<EditChatComponent />}
+            icon={Icon.Gear}
+            title="Chat Settings"
+            target={<ChatSettingsComponent />}
             shortcut={{ modifiers: ["cmd", "shift"], key: "o" }}
+          />
+          <Action
+            icon={Icon.Duplicate}
+            title="Duplicate Chat"
+            onAction={async () => {
+              let newChat = structuredClone(currentChatData);
+              newChat.id = Date.now().toString();
+              newChat.name = `Copy of ${newChat.name}`;
+              newChat.creationDate = new Date();
+              await addChatAsCurrent(setChatData, setCurrentChatData, newChat);
+              await toast(Toast.Style.Success, "Chat duplicated");
+            }}
+            shortcut={{ modifiers: ["cmd", "shift"], key: "d" }}
           />
           <Action
             icon={Icon.Download}
@@ -999,19 +1061,10 @@ export default function Chat({ launchContext }) {
             icon={Icon.ArrowDown}
             title="Next Chat"
             onAction={() => {
-              let chatIdx = 0;
-              for (let i = 0; i < chatData.chats.length; i++) {
-                if (chatData.chats[i].id === chatData.currentChat) {
-                  chatIdx = i;
-                  break;
-                }
-              }
+              let chatIdx = chatData.chats.findIndex((chat) => chat.id === chatData.currentChat);
               if (chatIdx === chatData.chats.length - 1) toast(Toast.Style.Failure, "No chats after current");
               else {
-                setChatData((oldData) => ({
-                  ...oldData,
-                  currentChat: chatData.chats[chatIdx + 1].id,
-                }));
+                changeProperty(setChatData, "currentChat", chatData.chats[chatIdx + 1].id);
               }
             }}
             shortcut={{ modifiers: ["cmd", "shift"], key: "arrowDown" }}
@@ -1020,19 +1073,10 @@ export default function Chat({ launchContext }) {
             icon={Icon.ArrowUp}
             title="Previous Chat"
             onAction={() => {
-              let chatIdx = 0;
-              for (let i = 0; i < chatData.chats.length; i++) {
-                if (chatData.chats[i].id === chatData.currentChat) {
-                  chatIdx = i;
-                  break;
-                }
-              }
+              let chatIdx = chatData.chats.findIndex((chat) => chat.id === chatData.currentChat);
               if (chatIdx === 0) toast(Toast.Style.Failure, "No chats before current");
               else {
-                setChatData((oldData) => ({
-                  ...oldData,
-                  currentChat: chatData.chats[chatIdx - 1].id,
-                }));
+                changeProperty(setChatData, "currentChat", chatData.chats[chatIdx - 1].id);
               }
             }}
             shortcut={{ modifiers: ["cmd", "shift"], key: "arrowUp" }}
@@ -1176,10 +1220,7 @@ export default function Chat({ launchContext }) {
         <List.Dropdown
           tooltip="Your Chats"
           onChange={(newChatID) => {
-            setChatData((oldData) => ({
-              ...oldData,
-              currentChat: newChatID,
-            }));
+            changeProperty(setChatData, "currentChat", newChatID);
           }}
           value={chatData.currentChat}
         >

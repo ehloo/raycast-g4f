@@ -1,7 +1,7 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "raycast-g4f",
-  "version": "3.9",
+  "version": "4.1",
   "title": "GPT4Free",
   "description": "Use GPT-4 for FREE, on Raycast - no API Key required.",
   "icon": "gpt-icon.png",
@@ -132,7 +132,7 @@
       "name": "translate",
       "title": "Translate",
       "description": "Translate text to another language",
-      "icon": "synonym-icon.png",
+      "icon": "translate-icon.png",
       "mode": "view"
     },
     {
@@ -243,6 +243,10 @@
           "value": "DeepInfraLlama32_90B_Vision"
         },
         {
+          "title": "DeepInfra (meta-llama-3.2-11b-vision)",
+          "value": "DeepInfraLlama32_11B_Vision"
+        },
+        {
           "title": "DeepInfra (meta-llama-3.1-405b)",
           "value": "DeepInfraLlama31_405B"
         },
@@ -255,8 +259,12 @@
           "value": "DeepInfraLlama31_8B"
         },
         {
-          "title": "DeepInfra (Mixtral-8x22B)",
-          "value": "DeepInfraMixtral_8x22B"
+          "title": "DeepInfra (llama-3.1-nemotron-70b)",
+          "value": "DeepInfraLlama31Nemotron70B"
+        },
+        {
+          "title": "DeepInfra (WizardLM-2-8x22B)",
+          "value": "DeepInfraWizardLM2_8x22B"
         },
         {
           "title": "DeepInfra (Mixtral-8x7B)",
@@ -285,14 +293,6 @@
         {
           "title": "DeepInfra (gemma-2-27b)",
           "value": "DeepInfraGemma2_27B"
-        },
-        {
-          "title": "DeepInfra (WizardLM-2-8x22B)",
-          "value": "DeepInfraWizardLM2_8x22B"
-        },
-        {
-          "title": "DeepInfra (llava-1.5-7b)",
-          "value": "DeepInfraLlava15_7B"
         },
         {
           "title": "Blackbox (custom-model)",
@@ -379,7 +379,7 @@
           "value": "ChatgptFree"
         },
         {
-          "title": "PizzaGPT (gpt-3.5-turbo)",
+          "title": "PizzaGPT (gpt-4o-mini)",
           "value": "PizzaGPT"
         },
         {
@@ -427,15 +427,33 @@
     },
     {
       "name": "webSearch",
-      "title": "Features",
-      "label": "Enable Web Search",
-      "description": "Add web search capabilities to GPT. Available in AI Chat.",
+      "title": "Web Search",
+      "description": "Allow GPT to search the web for information.",
       "required": false,
-      "type": "checkbox",
-      "default": false
+      "type": "dropdown",
+      "data": [
+        {
+          "title": "Disabled",
+          "value": "off"
+        },
+        {
+          "title": "Automatic",
+          "value": "auto"
+        },
+        {
+          "title": "Balanced",
+          "value": "balanced"
+        },
+        {
+          "title": "Always",
+          "value": "always"
+        }
+      ],
+      "default": "off"
     },
     {
       "name": "smartChatNaming",
+      "title": "Features",
       "label": "Enable Smart Chat Naming",
       "description": "Automatically rename chat sessions based on the messages you send.",
       "required": false,
@@ -448,7 +466,7 @@
       "description": "Automatically check for updates from the official GitHub source.",
       "required": false,
       "type": "checkbox",
-      "default": false
+      "default": true
     },
     {
       "name": "persistentStorage",
@@ -764,7 +782,7 @@
     "duck-duck-scrape": "^2.2.5",
     "fetch-to-curl": "^0.6.0",
     "g4f-image": "^1.2.0",
-    "gemini-g4f": "^12.3.8",
+    "gemini-g4f": "^12.3.9",
     "node-fetch": "^3.3.2"
   },
   "devDependencies": {

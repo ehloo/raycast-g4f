@@ -24,6 +24,8 @@ import { autoCheckForUpdates } from "../helpers/update";
 import { Message, pairs_to_messages } from "../classes/message";
 
 import { truncate_chat } from "../helpers/helper";
+import { formatWebResult, getWebResult, systemResponse, web_search_mode, webSystemPrompt } from "./tools/web";
+import { NexraProvider } from "./Providers/nexra";
 
 let generationStatus = { stop: false, loading: false };
 let get_status = () => generationStatus.stop;
@@ -41,7 +43,8 @@ export default (
     processPrompt = null,
     allowUploadFiles = false,
     defaultFiles = [],
-    useDefaultLanguage = true,
+    useDefaultLanguage = false,
+    webSearchMode = "off",
   } = {}
 ) => {
   // The parameters are documented here:
@@ -75,6 +78,8 @@ export default (
   // 10. allowUploadFiles: A boolean to allow uploading files in the Form. If true, a file upload field will be shown.
   // 11. defaultFiles: Files to always include in the prompt. This is an array of file paths.
   // 12. useDefaultLanguage: A boolean to use the default language. If true, the default language will be used in the response.
+  // 13. webSearchMode: A string to allow web search. If "always", we will always search.
+  // Otherwise, if "auto", the extension preferences are followed.
 
   /// Init
   const Pages = {
@@ -98,6 +103,13 @@ export default (
     if (generationStatus.loading) return;
     generationStatus.loading = true;
 
+    // load provider and model from preferences
+    const info = providers.get_provider_info();
+    // additional options
+    let options = providers.get_options_from_info(info);
+
+    let messages = [];
+
     // Modify the query before sending it to the API
     if (!regenerate) {
       // handle processPrompt
@@ -116,6 +128,20 @@ export default (
           query = `The default language is ${defaultLanguage}. Respond in this language.\n\n${query}`;
         }
       }
+
+      // handle web search
+      if (webSearchMode === "always" || (webSearchMode === "auto" && web_search_mode("gpt", info.provider))) {
+        // push system prompt
+        messages = [
+          new Message({ role: "user", content: webSystemPrompt }),
+          new Message({ role: "assistant", content: systemResponse }),
+          ...messages,
+        ];
+
+        // get web search results
+        let webResults = await getWebResult(query);
+        query = query + formatWebResult(webResults, query);
+      }
     }
 
     setLastQuery({ text: query, files: files });
@@ -128,11 +154,7 @@ export default (
 
     try {
       console.log(query);
-      const messages = [new Message({ role: "user", content: query, files: files })];
-      // load provider and model from preferences
-      const info = providers.get_provider_info();
-      // additional options
-      let options = providers.get_options_from_info(info);
+      messages = [...messages, new Message({ role: "user", content: query, files: files })];
 
       // generate response
       let response = "";
@@ -179,7 +201,7 @@ export default (
     } catch (e) {
       console.log(e);
       setMarkdown(
-        "## Could not access GPT.\n\nThis may be because GPT has decided that your prompt did not comply with its regulations. Please try another prompt, and if it still does not work, create an issue on GitHub."
+        "## Could not access GPT.\n\nPlease try another prompt, and if it still does not work, try switching to another provider. Please create an issue on GitHub."
       );
       await showToast({
         style: Toast.Style.Failure,
@@ -429,7 +451,7 @@ export const chatCompletion = async (info, chat, options, stream_update = null, 
   }
 
   // streaming related handling
-  if (providers.custom_stream_handled_providers.includes(provider)) return; // handled in the provider
+  if (provider.customStream) return; // handled in the provider
   if (stream_update) {
     await processStream(response, provider, stream_update, status);
     return;
@@ -471,7 +493,8 @@ export const getChatResponseSync = async (currentChat, query = null) => {
 
 // format response using some heuristics
 export const formatResponse = (response, provider = null) => {
-  if (provider.name === "Nexra" || provider.name === "BestIM") {
+  // eslint-disable-next-line no-constant-condition
+  if (false && (provider.name === "Nexra" || provider.name === "BestIM")) {
     // replace escape characters: \n with a real newline, \t with a real tab, etc.
     response = response.replace(/\\n/g, "\n");
     response = response.replace(/\\t/g, "\t");
@@ -526,7 +549,7 @@ export const processChunks = async function* (response, provider, status = null)
   let r = "";
   for await (const chunk of await processChunksIncremental(response, provider, status)) {
     // normally we add the chunk to r, but for certain providers, the chunk is already yielded fully
-    if (provider.name === "Nexra") {
+    if (provider === NexraProvider) {
       r = chunk;
     } else {
       r += chunk;

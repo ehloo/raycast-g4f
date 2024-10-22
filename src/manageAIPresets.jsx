@@ -1,6 +1,17 @@
 import { AIPreset, getAIPresets, getSubtitle, setAIPresets } from "./helpers/presets";
 import { useEffect, useState } from "react";
-import { Form, List, Action, ActionPanel, Icon, useNavigation, confirmAlert, showToast, Toast } from "@raycast/api";
+import {
+  Form,
+  List,
+  Action,
+  ActionPanel,
+  Icon,
+  useNavigation,
+  confirmAlert,
+  showToast,
+  Toast,
+  getPreferenceValues,
+} from "@raycast/api";
 import { help_action } from "./helpers/helpPage";
 import * as providers from "./api/providers";
 
@@ -27,7 +38,13 @@ export default function ManageAIPresets() {
     const idx = props.idx ?? 0;
     const newPreset = props.newPreset || false;
     let preset = newPreset
-      ? new AIPreset({ name: "New Preset", provider: providers.default_provider_string(), creativity: "0.7" })
+      ? new AIPreset({
+          name: "New Preset",
+          provider: providers.default_provider_string(),
+          webSearch: getPreferenceValues()["webSearch"],
+          creativity: "0.7",
+          isDefault: false,
+        })
       : presets[idx];
 
     return (
@@ -39,18 +56,20 @@ export default function ManageAIPresets() {
               onSubmit={async (values) => {
                 // Ensure no empty/duplicate names
                 if (preset.name === "") {
-                  await showToast(Toast.Style.Failure, "Preset name cannot be empty.");
+                  await showToast(Toast.Style.Failure, "Preset name cannot be empty");
                   return;
                 }
                 if ((newPreset || preset.name !== values.name) && presets.map((x) => x.name).includes(values.name)) {
-                  await showToast(Toast.Style.Failure, "Preset name already exists.");
+                  await showToast(Toast.Style.Failure, "Preset name already exists");
                   return;
                 }
 
                 preset.name = values.name;
                 preset.provider = values.provider;
+                preset.webSearch = values.webSearch;
                 preset.creativity = values.creativity;
                 preset.systemPrompt = values.systemPrompt;
+                preset.isDefault = values.isDefault;
 
                 if (newPreset) {
                   setPresets([...presets, preset]);
@@ -71,6 +90,13 @@ export default function ManageAIPresets() {
           {providers.ChatProvidersReact}
         </Form.Dropdown>
 
+        <Form.Description title="Web Search" text="Allow GPT to search the web for information." />
+        <Form.Dropdown id="webSearch" defaultValue={preset.webSearch}>
+          <Form.Dropdown.Item title="Disabled" value="off" />
+          <Form.Dropdown.Item title="Automatic" value="auto" />
+          <Form.Dropdown.Item title="Always" value="always" />
+        </Form.Dropdown>
+
         <Form.Description
           title="Creativity"
           text="Technical tasks like coding require less creativity, while open-ended ones require more."
@@ -85,6 +111,8 @@ export default function ManageAIPresets() {
 
         <Form.Description title="System Prompt" text="This prompt will be sent to GPT to start the conversation." />
         <Form.TextArea id="systemPrompt" defaultValue={preset.systemPrompt} />
+
+        <Form.Checkbox id="isDefault" label="Set as Default" defaultValue={preset.isDefault} />
       </Form>
     );
   };

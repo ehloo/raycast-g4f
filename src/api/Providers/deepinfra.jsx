@@ -2,7 +2,7 @@ import fetch from "node-fetch";
 import fs from "fs";
 
 import { messages_to_json } from "../../classes/message";
-import { getWebResult, webSearchTool } from "../tools/web";
+import { getWebResult, web_search_mode, webSearchTool } from "../tools/web";
 import { codeInterpreterTool, getCodeInterpreterResult } from "../tools/code";
 import { getPreferenceValues } from "@raycast/api";
 
@@ -38,15 +38,15 @@ const function_supported_models = [
   "meta-llama/Meta-Llama-3.1-405B-Instruct",
   "meta-llama/Meta-Llama-3.1-70B-Instruct",
   "meta-llama/Meta-Llama-3.1-8B-Instruct",
+  "nvidia/Llama-3.1-Nemotron-70B-Instruct",
 ];
 
 // Models that support file uploads
-const file_supported_models = ["llava-hf/llava-1.5-7b-hf", "meta-llama/Llama-3.2-90B-Vision-Instruct"];
+const file_supported_models = ["meta-llama/Llama-3.2-90B-Vision-Instruct", "meta-llama/Llama-3.2-11B-Vision-Instruct"];
 
 // max_tokens parameter overrides - some models have short context lengths
 const max_tokens_overrides = {
   "google/gemma-2-27b-it": 512,
-  "llava-hf/llava-1.5-7b-hf": 512,
 };
 
 const DeepInfraFormatChat = (chat, model) => {
@@ -93,7 +93,7 @@ export const DeepInfraProvider = {
     const model = options.model;
     const json_chat = DeepInfraFormatChat(chat, model);
 
-    const useWebSearch = getPreferenceValues()["webSearch"] && function_supported_models.includes(model);
+    const useWebSearch = options.webSearch === "auto" && function_supported_models.includes(model);
     const useCodeInterpreter = getPreferenceValues()["codeInterpreter"] && function_supported_models.includes(model);
     const tools = [...(useWebSearch ? [webSearchTool] : []), ...(useCodeInterpreter ? [codeInterpreterTool] : [])];
 

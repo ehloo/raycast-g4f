@@ -1,5 +1,6 @@
 import { curlRequest } from "../curl";
 import { DEFAULT_HEADERS } from "../../helpers/headers";
+import { messages_to_json } from "../../classes/message";
 
 const url = "https://www.phind.com";
 const home_url = "https://www.phind.com/search?home=true";
@@ -18,6 +19,7 @@ const headers = {
 
 export const PhindProvider = {
   name: "Phind",
+  customStream: true,
   generate: async function (chat, options, { stream_update }) {
     // get challenge seeds
     let stdout = "";
@@ -34,6 +36,7 @@ export const PhindProvider = {
     stdout = null;
 
     // prepare data
+    chat = messages_to_json(chat);
     let prompt = chat[chat.length - 1].content;
     chat.pop();
 

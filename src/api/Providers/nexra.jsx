@@ -1,5 +1,5 @@
 import fetch from "node-fetch";
-import { messages_to_json } from "../../classes/message";
+import { format_chat_to_prompt, messages_to_json } from "../../classes/message";
 
 // Reference: https://nexra.aryahcr.cc/documentation/chatgpt/en (under ChatGPT v2)
 const api_url_stream = "https://nexra.aryahcr.cc/api/chat/complements";
@@ -20,7 +20,12 @@ export const NexraProvider = {
 };
 
 export const getNexraResponseStream = async function* (chat, options, max_retries = 5) {
-  chat = messages_to_json(chat);
+  if (["Bing"].includes(options.model)) {
+    chat = [{ role: "user", content: format_chat_to_prompt(chat) }];
+  } else {
+    chat = messages_to_json(chat);
+  }
+
   let data = {
     messages: chat,
     stream: true,
@@ -55,11 +60,11 @@ export const getNexraResponseStream = async function* (chat, options, max_retrie
           break; // this goes on to next iteration of while loop
         }
 
-        if (chunkJson["finish"]) break;
         // if (chunkJson["error"]) throw new Error();
 
         let chunk = chunkJson["message"];
-        yield chunk; // note that this is the full response, not just incremental updates!
+        if (chunk) yield chunk; // note that this is the full response, not just incremental updates!
+        if (chunkJson["finish"]) break;
       }
     }
   } catch (e) {

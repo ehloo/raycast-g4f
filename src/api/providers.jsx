@@ -34,7 +34,8 @@ export const providers_info = {
   NexraBing: { provider: NexraProvider, model: "Bing", stream: true },
   NexraLlama31: { provider: NexraProvider, model: "llama-3.1", stream: true },
   NexraGeminiPro: { provider: NexraProvider, model: "gemini-pro", stream: true },
-  DeepInfraLlama32_90B_Vision: { provider: DeepInfraProvider, model: "meta-llama/Llama-3.2-90B-Vision-Instruct", stream: true },
+  DeepInfraLlama32_90B_Vision: { provider: DeepInfraProvider, model: "meta-llama/Llama-3.2-90B-Vision-Instruct", stream: true, context_tokens: 8000 },
+  DeepInfraLlama32_11B_Vision: { provider: DeepInfraProvider, model: "meta-llama/Llama-3.2-11B-Vision-Instruct", stream: true },
   DeepInfraLlama31_70B: { provider: DeepInfraProvider, model: "meta-llama/Meta-Llama-3.1-70B-Instruct", stream: true },
   DeepInfraLlama31_8B: { provider: DeepInfraProvider, model: "meta-llama/Meta-Llama-3.1-8B-Instruct", stream: true },
   DeepInfraLlama31_405B: { provider: DeepInfraProvider, model: "meta-llama/Meta-Llama-3.1-405B-Instruct", stream: true },
@@ -47,7 +48,7 @@ export const providers_info = {
   DeepInfraLlama3_70B: { provider: DeepInfraProvider, model: "meta-llama/Meta-Llama-3-70B-Instruct", stream: true, context_tokens: 8000 },
   DeepInfraOpenChat36_8B: { provider: DeepInfraProvider, model: "openchat/openchat-3.6-8b", stream: true, context_tokens: 8000 },
   DeepInfraGemma2_27B: { provider: DeepInfraProvider, model: "google/gemma-2-27b-it", stream: true, context_tokens: 4096 },
-  DeepInfraLlava15_7B: { provider: DeepInfraProvider, model: "llava-hf/llava-1.5-7b-hf", stream: true, context_tokens: 4096 },
+  DeepInfraLlama31Nemotron70B: { provider: DeepInfraProvider, model: "nvidia/Llama-3.1-Nemotron-70B-Instruct", stream: true },
   Blackbox: { provider: BlackboxProvider, model: "blackbox", stream: true },
   BlackboxLlama31_405B: { provider: BlackboxProvider, model: "llama-3.1-405b", stream: true },
   BlackboxLlama31_70B: { provider: BlackboxProvider, model: "llama-3.1-70b", stream: true },
@@ -81,10 +82,6 @@ export const providers_info = {
   OllamaLocal: { provider: OllamaLocalProvider, stream: true },
   CustomOpenAI: { provider: CustomOpenAIProvider, stream: true },
 };
-
-// Additional properties
-// Providers that handle the stream update in a custom way (see chatCompletion function)
-export const custom_stream_handled_providers = [GeminiProvider, PhindProvider, ChatgptFreeProvider];
 
 /// Chat providers (user-friendly names)
 // fetched from package.json for consistency and to avoid duplicate code
