@@ -16,10 +16,12 @@ import { useEffect, useState } from "react";
 
 import { Storage } from "./api/storage";
 import { watch } from "node:fs/promises";
+import throttle from "lodash.throttle";
 
 import { current_datetime, formatDate, removePrefix } from "./helpers/helper";
 import { help_action, help_action_panel } from "./helpers/helpPage";
 import { autoCheckForUpdates } from "./helpers/update";
+import { plainTextMarkdown } from "./helpers/markdown";
 
 import { MessagePair, format_chat_to_prompt, pairs_to_messages } from "./classes/message";
 
@@ -266,6 +268,9 @@ export default function Chat({ launchContext }) {
       return;
     }
 
+    // Init other variables
+    const devMode = getPreferenceValues()["devMode"];
+
     if (!info.stream) {
       response = await getChatResponse(currentChatData, query);
       setCurrentChatMessage(currentChatData, setCurrentChatData, messageID, { response: response });
@@ -276,21 +281,19 @@ export default function Chat({ launchContext }) {
     } else {
       generationStatus = { stop: false, loading: true, updateCurrentResponse: false };
       let i = 0;
-      let lastChunkTime = Date.now();
 
-      const handler = async (new_message) => {
+      const _handler = async (new_message) => {
         i++;
         response = new_message;
         response = formatResponse(response, info.provider);
         setCurrentChatMessage(currentChatData, setCurrentChatData, messageID, { response: response });
 
         if (generationStatus.updateCurrentResponse) {
-          // See ViewResponseComponent for more details
-          // We throttle the updates to prevent excessive file I/O
-          if (Date.now() - lastChunkTime > 300) {
-            await Storage.fileStorage_write("updateCurrentResponse", response);
-            lastChunkTime = Date.now();
-          }
+          await _file_handler();
+        }
+
+        if (devMode && i % 1 === 0) {
+          console.log(process.memoryUsage());
         }
 
         // Web Search functionality
@@ -298,7 +301,7 @@ export default function Chat({ launchContext }) {
         if (
           webSearchMode === "auto" &&
           features.webSearch &&
-          (i & 15) === 0 &&
+          (i & 7) === 0 &&
           response.includes(webToken) &&
           response.includes(webTokenEnd)
         ) {
@@ -313,20 +316,29 @@ export default function Chat({ launchContext }) {
         loadingToast.message = `${chars} chars (${charPerSec} / sec) | ${elapsed.toFixed(1)} sec`;
       };
 
+      const _file_handler = throttle(async () => {
+        await Storage.fileStorage_write("updateCurrentResponse", response);
+      }, 300); // See ViewResponseComponent for more details
+
+      const handler = throttle(_handler, 100);
+
+      // Get response
       await getChatResponse(currentChatData, query, handler, get_status);
+
+      await handler.flush();
+
+      if (generationStatus.updateCurrentResponse) {
+        await _file_handler.flush();
+      }
     }
 
     // Web Search functionality
     // Process web search response again in case streaming is false, or if it was not processed during streaming
-    if (webSearchMode === "auto" && features.webSearch && response.includes(webToken)) {
+    // Prevent double processing by checking that generationStatus.stop is false
+    if (webSearchMode === "auto" && features.webSearch && !generationStatus.stop && response.includes(webToken)) {
       generationStatus.stop = true;
       await processWebSearchResponse(currentChatData, setCurrentChatData, messageID, response, query);
       return;
-    }
-
-    if (generationStatus.updateCurrentResponse) {
-      // Write the final response to file
-      await Storage.fileStorage_write("updateCurrentResponse", response);
     }
 
     setCurrentChatMessage(currentChatData, setCurrentChatData, messageID, { finished: true });
@@ -606,10 +618,12 @@ export default function Chat({ launchContext }) {
     );
   };
 
-  let ViewResponseComponent = ({ idx }) => {
+  let ViewResponseComponent = ({ idx, cb = null }) => {
     const { pop } = useNavigation();
 
-    const [response, setResponse] = useState(currentChatData.messages[idx].second.content);
+    let initial = currentChatData.messages[idx].second.content;
+    if (cb) initial = cb(initial); // cb is used to modify the response before displaying it
+    const [response, setResponse] = useState(initial);
 
     // The key thing here is that this pushed view (via Action.Push) is a sibling component, NOT a child,
     // so it does not automatically rerender upon a value change. So when the response streams, the view doesn't update.
@@ -634,6 +648,7 @@ export default function Chat({ launchContext }) {
         for await (const event of watcher) {
           if (event.eventType === "change") {
             let response = await Storage.fileStorage_read("updateCurrentResponse");
+            if (cb) response = cb(response);
             setResponse(response);
           }
         }
@@ -804,14 +819,15 @@ export default function Chat({ launchContext }) {
     let newQuery = query + webResponse;
 
     // remove latest message and insert new one
-    currentChatData.messages.shift();
-    currentChatData.messages.unshift(new MessagePair({ prompt: newQuery }));
-    let newMessageID = currentChatData.messages[0].id;
+    let newChatData = structuredClone(currentChatData);
+    newChatData.messages.shift();
+    newChatData.messages.unshift(new MessagePair({ prompt: newQuery }));
+    let newMessageID = newChatData.messages[0].id;
 
-    setCurrentChatData(currentChatData); // important to update the UI!
+    setCurrentChatData(newChatData); // important to update the UI!
 
     // Note how we don't pass query here because it is already in the chat
-    await updateChatResponse(currentChatData, setCurrentChatData, newMessageID, null, { webSearch: false });
+    await updateChatResponse(newChatData, setCurrentChatData, newMessageID, null, { webSearch: false });
   };
 
   // Smart Chat Naming functionality
@@ -824,7 +840,8 @@ export default function Chat({ launchContext }) {
       }
 
       // Format chat using default wrapper
-      let formatted_chat = format_chat_to_prompt(pairs_to_messages(newChat.messages), null);
+      let formatted_chat = format_chat_to_prompt(pairs_to_messages(newChat.messages));
+      formatted_chat = formatted_chat.substring(0, 4000) + "..."; // limit to 4000 characters
       let newQuery =
         "Below is a conversation between the user and the assistant. Give a concise name for this chat. " +
         "Output ONLY the name of the chat (WITHOUT quotes) and NOTHING else.\n\n" +
@@ -915,6 +932,12 @@ export default function Chat({ launchContext }) {
             title="View Response"
             target={<ViewResponseComponent idx={idx} />}
             shortcut={{ modifiers: ["cmd"], key: "f" }}
+          />
+          <Action.Push
+            icon={Icon.Maximize}
+            title="View as Plain Text"
+            target={<ViewResponseComponent idx={idx} cb={plainTextMarkdown} />}
+            shortcut={{ modifiers: ["cmd", "shift"], key: "f" }}
           />
           <Action
             icon={Icon.ArrowClockwise}
@@ -1168,6 +1191,7 @@ export default function Chat({ launchContext }) {
               files: launchContext.query.files,
             }),
           ],
+          provider: launchContext.provider,
         });
         addChatAsCurrent(setChatData, setCurrentChatData, newChat);
       }
@@ -1236,7 +1260,7 @@ export default function Chat({ launchContext }) {
           if (x.visible)
             return (
               <List.Item
-                title={x.first.content}
+                title={x.first.content.substring(0, 50)} // limit to 50 characters
                 subtitle={formatDate(x.creationDate)}
                 detail={
                   <List.Item.Detail

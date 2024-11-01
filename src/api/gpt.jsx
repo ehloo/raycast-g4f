@@ -18,12 +18,15 @@ import { useEffect, useState } from "react";
 
 import * as providers from "./providers";
 
+import throttle from "lodash.throttle";
+
 import { help_action } from "../helpers/helpPage";
 import { autoCheckForUpdates } from "../helpers/update";
 
 import { Message, pairs_to_messages } from "../classes/message";
 
 import { truncate_chat } from "../helpers/helper";
+import { plainTextMarkdown } from "../helpers/markdown";
 import { formatWebResult, getWebResult, systemResponse, web_search_mode, webSystemPrompt } from "./tools/web";
 import { NexraProvider } from "./Providers/nexra";
 
@@ -45,6 +48,8 @@ export default (
     defaultFiles = [],
     useDefaultLanguage = false,
     webSearchMode = "off",
+    displayPlainText = false,
+    allowedProviders = null,
   } = {}
 ) => {
   // The parameters are documented here:
@@ -80,6 +85,8 @@ export default (
   // 12. useDefaultLanguage: A boolean to use the default language. If true, the default language will be used in the response.
   // 13. webSearchMode: A string to allow web search. If "always", we will always search.
   // Otherwise, if "auto", the extension preferences are followed.
+  // 14. displayPlainText: A boolean to display the response as plain text. If true, we attempt to convert the markdown to plain text.
+  // 15. allowedProviders: An array of allowed provider strings. If provided, only the providers in the array will be used.
 
   /// Init
   const Pages = {
@@ -87,11 +94,20 @@ export default (
     Detail: 1,
   };
   const [page, setPage] = useState(Pages.Detail);
-  const [markdown, setMarkdown] = useState("");
+  const [markdown, _setMarkdown] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [selectedState, setSelected] = useState("");
   const [lastQuery, setLastQuery] = useState({ text: "", files: [] });
   const [lastResponse, setLastResponse] = useState("");
+  const [providerString, setProviderString] = useState(""); // global variable since it may be used outside the main function
+
+  const setMarkdown = (text) => {
+    if (displayPlainText) {
+      _setMarkdown(plainTextMarkdown(text));
+    } else {
+      _setMarkdown(text);
+    }
+  };
 
   // Init parameters
   let { query: argQuery } = props.arguments ?? {};
@@ -103,8 +119,13 @@ export default (
     if (generationStatus.loading) return;
     generationStatus.loading = true;
 
-    // load provider and model from preferences
-    const info = providers.get_provider_info();
+    // load provider and model
+    const providerString =
+      !allowedProviders || allowedProviders.includes(providers.default_provider_string())
+        ? providers.default_provider_string()
+        : allowedProviders[0];
+    setProviderString(providerString);
+    const info = providers.get_provider_info(providerString);
     // additional options
     let options = providers.get_options_from_info(info);
 
@@ -174,7 +195,7 @@ export default (
         let loadingToast = await showToast(Toast.Style.Animated, "Response loading");
         generationStatus.stop = false;
 
-        const handler = (new_message) => {
+        const _handler = (new_message) => {
           response = new_message;
           response = formatResponse(response, info.provider);
           setMarkdown(response);
@@ -186,7 +207,11 @@ export default (
           loadingToast.message = `${chars} chars (${charPerSec} / sec) | ${elapsed.toFixed(1)} sec`;
         };
 
+        const handler = throttle(_handler, 100);
+
         await chatCompletion(info, messages, options, handler, get_status);
+
+        handler.flush();
       }
       setLastResponse(response);
 
@@ -333,7 +358,7 @@ export default (
                 await launchCommand({
                   name: "aiChat",
                   type: LaunchType.UserInitiated,
-                  context: { query: lastQuery, response: lastResponse, creationName: "" },
+                  context: { query: lastQuery, response: lastResponse, provider: providerString },
                 });
               }}
             />
@@ -544,16 +569,38 @@ export const processChunksIncremental = async function* (response, provider, sta
 };
 
 // instead of yielding incrementally, this function yields the entire response each time.
+// this allows us to perform more complex operations on the response, such as adding a cursor icon.
 // hence, when using the function, we will do `response = chunk` instead of `response += chunk`
 export const processChunks = async function* (response, provider, status = null) {
   let r = "";
+
+  // Experimental feature: Show a cursor icon while loading the response
+  const useCursorIcon = getPreferenceValues()["useCursorIcon"];
+  const cursorIcon = " ●"; // const cursorIcon = "▋";
+
   for await (const chunk of await processChunksIncremental(response, provider, status)) {
+    if (useCursorIcon) {
+      // remove cursor icon if enabled
+      r = r.slice(0, -cursorIcon.length);
+    }
+
     // normally we add the chunk to r, but for certain providers, the chunk is already yielded fully
     if (provider === NexraProvider) {
       r = chunk;
     } else {
       r += chunk;
     }
+
+    if (useCursorIcon) {
+      r += cursorIcon;
+    }
+
+    yield r;
+  }
+
+  if (useCursorIcon) {
+    // remove cursor icon after response is finished
+    r = r.slice(0, -cursorIcon.length);
     yield r;
   }
 };

@@ -1,7 +1,7 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "raycast-g4f",
-  "version": "4.1",
+  "version": "4.2",
   "title": "GPT4Free",
   "description": "Use GPT-4 for FREE, on Raycast - no API Key required.",
   "icon": "gpt-icon.png",
@@ -65,6 +65,22 @@
       ]
     },
     {
+      "name": "askAboutBrowserTab",
+      "title": "Ask About Browser Tab",
+      "description": "Ask GPT about browser tab",
+      "icon": "screen-icon.png",
+      "mode": "view",
+      "arguments": [
+        {
+          "name": "query",
+          "placeholder": "Query",
+          "type": "text",
+          "required": false
+        }
+      ],
+      "disabledByDefault": true
+    },
+    {
       "name": "continue",
       "title": "Continue Text",
       "description": "Generate completion of text",
@@ -90,6 +106,13 @@
       "title": "Fix Code",
       "description": "Fix errors and bugs in code",
       "icon": "code-icon.png",
+      "mode": "view"
+    },
+    {
+      "name": "format",
+      "title": "Format Text",
+      "description": "Fix formatting of text",
+      "icon": "grammar-icon.png",
       "mode": "view"
     },
     {
@@ -133,7 +156,17 @@
       "title": "Translate",
       "description": "Translate text to another language",
       "icon": "translate-icon.png",
-      "mode": "view"
+      "mode": "view",
+      "preferences": [
+        {
+          "name": "translateUseDefaultLanguage",
+          "label": "Always Use Default Language",
+          "description": "Always translate to the default language, skipping the language selection form.",
+          "required": false,
+          "type": "checkbox",
+          "default": false
+        }
+      ]
     },
     {
       "name": "improve",
@@ -477,9 +510,25 @@
       "default": false
     },
     {
+      "name": "useCursorIcon",
+      "label": "Enable Cursor Icon",
+      "description": "Show a cursor icon when the response is loading.",
+      "required": false,
+      "type": "checkbox",
+      "default": true
+    },
+    {
       "name": "codeInterpreter",
       "label": "Enable Code Interpreter (BETA)",
       "description": "Allows GPT to interpret and run Python code locally, based on your queries. Use at your own risk!",
+      "required": false,
+      "type": "checkbox",
+      "default": false
+    },
+    {
+      "name": "devMode",
+      "label": "Enable Developer Mode",
+      "description": "Enable developer mode for more extensive logging. Do not enable this.",
       "required": false,
       "type": "checkbox",
       "default": false
@@ -783,6 +832,7 @@
     "fetch-to-curl": "^0.6.0",
     "g4f-image": "^1.2.0",
     "gemini-g4f": "^12.3.9",
+    "lodash.throttle": "^4.1.1",
     "node-fetch": "^3.3.2"
   },
   "devDependencies": {
